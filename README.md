@@ -112,7 +112,11 @@ getTier() === TIERS.P;
 
 ### `requestDOMPermit(key: string, onRevokeHandler?: Function): Promise`
 
-Request a permit to modify the DOM. This is required before modifying the DOM on the Presentation Layer application, and will always be granted on other applications.
+Request a permit to modify the DOM.
+
+This is advised before modifying the DOM on Presentation Layer generation applications (as they are controlled by React, and will almost certainly undo your own changes).
+
+DOM modification is usually safe on older generation applications, but permits should be requested anyway, for the sake of consistency.
 
 The `key` argument is used by Presentation Layer to activate its respective `<Decoy>` component.
 
@@ -121,10 +125,10 @@ An optional `onRevokeHandler` argument can be passed, which will be called if Pr
 ```js
 import { DECOY_KEYS, requestDOMPermit } from '@abcnews/env-utils';
 
-requestDOMPermit(DECOY_KEYS.ARTICLE, () => {
-  // It is no longer safe to modify the DOM tree below the <Decoy key="article"> PL compoonent
+requestDOMPermit(DECOY_KEYS.PAGE, () => {
+  // It is no longer safe to modify the DOM tree below the <Decoy key="page"> PL compoonent
 }).then(() => {
-  // It is now safe to modify the DOM tree below the <Decoy key="article"> PL compoonent
+  // It is now safe to modify the DOM tree below the <Decoy key="page"> PL compoonent
 });
 ```
 
