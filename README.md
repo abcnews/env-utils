@@ -1,8 +1,8 @@
-# env-utils
+# @abcnews/env-utils
 
 Utilities for identifying aspects of your code's execution environment and respectfully interacting with the DOM.
 
-You can identify the current **application**, **generation** and **tier**.
+You can identify the current environment's **application**, **generation** and **tier** (see [API](#api) for what each of those are).
 
 Each generation has its own assumptions about how and when we should modfy the DOM. Always ask for permission first, and listen for a notifications of that permission being revoked.
 
