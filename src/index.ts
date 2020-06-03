@@ -60,10 +60,10 @@ declare global {
 const isSelectable = (selector: string): boolean =>
   !!document.querySelector(selector);
 const IS_APPLICATION_PHASE_1_MOBILE = isSelectable(
-  'body.application-standard:not(.application-mobile)'
+  'body.platform-mobile:not(.platform-standard)'
 );
 const IS_APPLICATION_PHASE_1_STANDARD = isSelectable(
-  'body.application-mobile:not(.application-standard)'
+  'body.platform-standard:not(.platform-mobile)'
 );
 const IS_APPLICATION_PHASE_2 = isSelectable('meta[content="WCMS FTL"]');
 const IS_APPLICATION_PRESENTATION_LAYER_NEWS_WEB = isSelectable(
