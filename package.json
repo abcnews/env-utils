@@ -1,6 +1,6 @@
 {
   "name": "@abcnews/env-utils",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Utilities for identifying aspects of your code's execution environment and respectfully interacting with the DOM",
   "license": "MIT",
   "author": "Australian Broadcasting Corporation",
