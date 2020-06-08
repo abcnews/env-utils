@@ -110,15 +110,19 @@ export function getGeneration(): GENERATIONS | null {
 
 // Tier detection
 // * Tiers can be detected (depending on the generation) by matching unique hostnames
-const IS_TIER_PREVIEW = (hostname =>
-  hostname.indexOf(
-    IS_GENERATION_PRESENTATION_LAYER
-      ? 'preview.presentation-layer'
-      : 'nucwed.aus.aunty'
-  ) > -1)(window.location.hostname);
-const IS_TIER_LIVE = !IS_TIER_PREVIEW;
+const HOSTNAME = window.location.hostname;
+const isPartialInHostname = (partialHostname: string): boolean =>
+  HOSTNAME.indexOf(partialHostname) > -1;
+const IS_TIER_PREVIEW = isPartialInHostname(
+  IS_GENERATION_PRESENTATION_LAYER
+    ? 'preview.presentation-layer'
+    : 'nucwed.aus.aunty'
+);
+const IS_TIER_LIVE = !!['www.abc', 'mobile.abc', 'bigted.abc'].find(
+  isPartialInHostname
+);
 
-// Allow us to read the deteted tier
+// Allow us to read the detected tier
 export function getTier(): TIERS | null {
   return IS_TIER_PREVIEW ? TIERS.PREVIEW : IS_TIER_LIVE ? TIERS.LIVE : null;
 }
