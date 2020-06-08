@@ -61,16 +61,16 @@ console.log(GENERATIONS);
 //   }
 console.log(TIERS);
 // > {
-//     L: 'live',
-//     P: 'preview',
+//     LIVE: 'live',
+//     PREVIEW: 'preview',
 //   }
 ```
 
 Note: _News Web Chromeless_ is technically the _News Web_ application, but renders articles without their Header/Nav/Footer in order to sit naturally in the ABC News app. We make a distinction in this library so that both environments can be handled separately.
 
-### `getApplication(): string`
+### `getApplication(): string | null`
 
-Return the environment's **application** (Phase 1 Mobile; Phase 1 Standard; Phase 2; News Web; News Web Chromeless).
+Return the environment's **application** (Phase 1 Mobile; Phase 1 Standard; Phase 2; News Web; News Web Chromeless) as a string value from the `APPLICATIONS` enum, or `null` if the application couldn't be determined.
 
 ```js
 import { APPLICATIONS, getApplication } from '@abcnews/env-utils';
@@ -82,9 +82,11 @@ getApplication() === APPLICATIONS.NW;
 // > true
 ```
 
-### `getGeneration(): string`
+Applications are currently determined by success/failure of selecting DOM nodes in the document, which hint at the technology used to render them on the server.
 
-Return the environment's **generation** (Phase 1; Phase 2; Presentation Layer).
+### `getGeneration(): string | null`
+
+Return the environment's **generation** (Phase 1; Phase 2; Presentation Layer) as a string value from the `GENERATIONS` enum, or `null` if the generation couldn't be determined.
 
 ```js
 import { GENERATIONS, getGeneration } from '@abcnews/env-utils';
@@ -96,9 +98,11 @@ getGeneration() === GENERATIONS.PL;
 // > true
 ```
 
-### `getTier(): string`
+Generations are currently determined by categorising detected applications.
 
-Return the environment's **tier** (Live; Preview).
+### `getTier(): string | null`
+
+Return the environment's **tier** (Live; Preview) as a string value from the `TIERS` enum, or `null` if the tier couldn't be determined.
 
 ```js
 import { TIERS, getTier } from '@abcnews/env-utils';
@@ -106,9 +110,11 @@ import { TIERS, getTier } from '@abcnews/env-utils';
 getTier();
 // > 'preview'
 
-getTier() === TIERS.P;
+getTier() === TIERS.PREVIEW;
 // > true
 ```
+
+Tiers are currently determined by comparing `window.location.hostname` to domains that tiers are potentially served from.
 
 ### `requestDOMPermit(key: string, onRevokeHandler?: Function): Promise`
 
