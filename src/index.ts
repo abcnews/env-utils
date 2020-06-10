@@ -160,7 +160,7 @@ export function requestDOMPermit(
 
         // If this is the first permit requested for a location, we need
         // to request a decoy activation before granting the permit
-        if (presentationLayerDecoyActivationRequests[key] === null) {
+        if (presentationLayerDecoyActivationRequests[key] == null) {
           const presentationLayerDecoyActivationRequest = new Promise<void>(
             resolve => {
               presentationLayerDecoyActivationRequest._resolve = resolve;
