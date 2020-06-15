@@ -34,16 +34,17 @@ type DOMPermit = {
   onRevokeHandler?: Function;
 };
 
-type presentationLayerDecoyActivationRequests = {
+type DecoyActivationRequests = {
   [key in DECOY_KEYS]?: Promise<void>;
 };
 
-interface ExternallyResolvablePromise extends Promise<void> {
-  _resolve: Function;
-}
-
 interface DecoyEventDetail {
   key: DECOY_KEYS;
+  active?: boolean;
+}
+
+interface DecoyEvent extends CustomEvent {
+  detail: DecoyEventDetail;
 }
 
 declare global {
@@ -128,8 +129,8 @@ export function getTier(): TIERS | null {
 }
 
 // Store references to PL decoy activation requests and granted DOM permits
-const presentationLayerDecoyActivationRequests: presentationLayerDecoyActivationRequests = {};
-const domPermitsGranted: DOMPermit[] = [];
+const decoyActivationRequests: DecoyActivationRequests = {};
+let domPermitsGranted: DOMPermit[] = [];
 
 // Allow us to check when the document has fully loaded (and PL's DOM is hydrated, if present)
 export const whenDOMReady: Promise<void> = new Promise(resolve =>
@@ -160,54 +161,61 @@ export function requestDOMPermit(
 
         // If this is the first permit requested for a location, we need
         // to request a decoy activation before granting the permit
-        if (presentationLayerDecoyActivationRequests[key] == null) {
-          const presentationLayerDecoyActivationRequest = new Promise<void>(
-            resolve => {
-              presentationLayerDecoyActivationRequest._resolve = resolve;
-              window.dispatchEvent(
-                new CustomEvent('decoy', { detail: { key, active: true } })
+        if (decoyActivationRequests[key] == null) {
+          decoyActivationRequests[key] = new Promise<void>(resolve => {
+            // Handler should only run once per correct key, then stop listening
+            function onDecoyActiveHandler({ detail }: DecoyEvent) {
+              if (detail.key !== key) {
+                return;
+              }
+
+              window.removeEventListener(
+                PresentationLayerCustomEvents.DA,
+                onDecoyActiveHandler
               );
+              resolve();
             }
-          ) as ExternallyResolvablePromise;
-          presentationLayerDecoyActivationRequests[
-            key
-          ] = presentationLayerDecoyActivationRequest;
+
+            window.addEventListener(
+              PresentationLayerCustomEvents.DA,
+              onDecoyActiveHandler
+            );
+
+            // Request decoy activation by dispatching an event that PL will be listening for
+            window.dispatchEvent(
+              new CustomEvent<DecoyEventDetail>('decoy', {
+                detail: { key, active: true },
+              })
+            );
+          });
         }
 
-        // Grant the permit when the decoy is active, and store a
-        // reference so that the revocation handler can be called
+        // Grant the permit if/when the decoy is active, and store a
+        // reference so that a revocation handler can be called
         // when PL decides to deactivate the decoy
-        (presentationLayerDecoyActivationRequests[
-          key
-        ] as ExternallyResolvablePromise).then(() => {
-          domPermitsGranted.push({ key, onRevokeHandler });
+        decoyActivationRequests[key]!.then(() => {
+          domPermitsGranted = domPermitsGranted.concat([
+            { key, onRevokeHandler },
+          ]);
           resolve();
         });
       })
   );
 }
 
-// Set up global events for PL decoy management
 if (IS_GENERATION_PRESENTATION_LAYER) {
-  // Listen for PL decoy activations and resolve activation requests
-  // (allowing current and subsequent DOM permits to be granted)
-  window.addEventListener(PresentationLayerCustomEvents.DA, ({ detail }) => {
-    const presentationLayerDecoyActivationRequest = presentationLayerDecoyActivationRequests[
-      detail.key
-    ] as ExternallyResolvablePromise;
-
-    if (presentationLayerDecoyActivationRequest != null) {
-      presentationLayerDecoyActivationRequest._resolve();
-    }
-  });
-
   // Listen for PL decoy deactivations and revoke previously granted DOM permits
-  window.addEventListener(PresentationLayerCustomEvents.DI, ({ detail }) =>
-    domPermitsGranted.forEach(
-      ({ key, onRevokeHandler }) =>
-        key === detail.key &&
-        typeof onRevokeHandler === 'function' &&
-        onRevokeHandler()
-    )
-  );
+  window.addEventListener(PresentationLayerCustomEvents.DI, ({ detail }) => {
+    domPermitsGranted = domPermitsGranted.filter(({ key, onRevokeHandler }) => {
+      if (key !== detail.key) {
+        return true;
+      }
+
+      if (typeof onRevokeHandler === 'function') {
+        onRevokeHandler();
+      }
+
+      return false;
+    });
+  });
 }
