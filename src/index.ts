@@ -56,8 +56,7 @@ declare global {
 }
 
 // Application detection
-// * Exact applications are determined by selecting uniqe parts of the DOM
-// * Abstract applications can determined by consulting sets of exact applications
+// * Every application has uniquely selectable elements in the document's <head>
 const isSelectable = (selector: string): boolean =>
   !!document.querySelector(selector);
 const IS_APPLICATION_PHASE_1_MOBILE = isSelectable(
@@ -119,9 +118,12 @@ const IS_TIER_PREVIEW = isPartialInHostname(
     ? 'preview.presentation-layer'
     : 'nucwed.aus.aunty'
 );
-const IS_TIER_LIVE = !!['www.abc', 'mobile.abc', 'bigted.abc'].find(
-  isPartialInHostname
-);
+const IS_TIER_LIVE = !![
+  'www.abc',
+  'mobile.abc',
+  'bigted.abc',
+  'newsapp.abc',
+].find(isPartialInHostname);
 
 // Allow us to read the detected tier
 export function getTier(): TIERS | null {
