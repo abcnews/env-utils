@@ -12,7 +12,7 @@ Each generation has its own assumptions about how and when we should modfy the D
 npm i @abcnews/env-utils
 ```
 
-Assume we're using this module in a (Presentation Layer) News Web article on our Preview website
+Assume we're using this module in a article rendered by Presentation Layer News Web on our Preview website
 
 ```js
 import {
@@ -23,7 +23,7 @@ import {
 } from '@abcnews/env-utils';
 
 getApplication();
-// > 'nw'
+// > 'pln'
 
 getGeneration();
 // > 'pl'
@@ -50,8 +50,10 @@ console.log(APPLICATIONS);
 //     P1M: 'p1m', // Phase 1 Mobile
 //     P1S: 'p1s', // Phase 1 Standard
 //     P2:  'p2',  // Phase 2
-//     NW:  'nw',  // News Web
-//     NWC: 'nwc', // News Web Chromeless
+//     PLA: 'pla', // Presentation Layer ABC AMP
+//     PLC: 'plc', // Presentation Layer Core
+//     PLL: 'pll', // Presentation Layer Life
+//     PLN: 'pln', // Presentation Layer News Web
 //   }
 console.log(GENERATIONS);
 // > {
@@ -66,19 +68,17 @@ console.log(TIERS);
 //   }
 ```
 
-Note: _News Web Chromeless_ is technically the _News Web_ application, but renders articles without their Header/Nav/Footer in order to sit naturally in the ABC News app. We make a distinction in this library so that both environments can be handled separately.
-
 ### `getApplication(): string | null`
 
-Return the environment's **application** (Phase 1 Mobile; Phase 1 Standard; Phase 2; News Web; News Web Chromeless) as a string value from the `APPLICATIONS` enum, or `null` if the application couldn't be determined.
+Return the environment's **application** (Phase 1 Mobile; Phase 1 Standard; Phase 2; Presentation Layer ABC AMP; Presentation Layer Core; Presentation Layer Life; Presentation Layer News Web) as a string value from the `APPLICATIONS` enum, or `null` if the application couldn't be determined.
 
 ```js
 import { APPLICATIONS, getApplication } from '@abcnews/env-utils';
 
 getApplication();
-// > 'nw'
+// > 'pln'
 
-getApplication() === APPLICATIONS.NW;
+getApplication() === APPLICATIONS.PLN;
 // > true
 ```
 

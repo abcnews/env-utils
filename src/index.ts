@@ -2,8 +2,10 @@ export enum APPLICATIONS {
   P1M = 'p1m',
   P1S = 'p1s',
   P2 = 'p2',
-  NW = 'nw',
-  NWC = 'nwc',
+  PLA = 'pla',
+  PLC = 'plc',
+  PLL = 'pll',
+  PLN = 'pln',
 }
 
 export enum GENERATIONS {
@@ -16,6 +18,8 @@ export enum TIERS {
   LIVE = 'live',
   PREVIEW = 'preview',
 }
+
+type AGTN = APPLICATIONS | GENERATIONS | TIERS | null;
 
 export enum DECOY_KEYS {
   ARTICLE = 'article',
@@ -55,84 +59,102 @@ declare global {
   }
 }
 
-// Application detection
-// * Every application has uniquely selectable elements in the document's <head>
-const isSelectable = (selector: string): boolean =>
-  !!document.querySelector(selector);
-const IS_APPLICATION_PHASE_1_MOBILE = isSelectable(
-  'body.platform-mobile:not(.platform-standard)'
-);
-const IS_APPLICATION_PHASE_1_STANDARD = isSelectable(
-  'body.platform-standard:not(.platform-mobile)'
-);
-const IS_APPLICATION_PHASE_2 = isSelectable('meta[content="WCMS FTL"]');
-const IS_APPLICATION_PRESENTATION_LAYER_NEWS_WEB = isSelectable(
-  'link[data-chunk="page.ArticleDetail"]'
-);
-const IS_APPLICATION_PRESENTATION_LAYER_NEWS_WEB_APP = isSelectable(
-  'link[data-chunk="page.AppArticleDetail"]'
-);
-
-// Allow us to read the detected application
-export function getApplication(): APPLICATIONS | null {
-  return IS_APPLICATION_PRESENTATION_LAYER_NEWS_WEB
-    ? APPLICATIONS.NW
-    : IS_APPLICATION_PRESENTATION_LAYER_NEWS_WEB_APP
-    ? APPLICATIONS.NWC
-    : IS_APPLICATION_PHASE_2
-    ? APPLICATIONS.P2
-    : IS_APPLICATION_PHASE_1_MOBILE
-    ? APPLICATIONS.P1M
-    : IS_APPLICATION_PHASE_1_STANDARD
-    ? APPLICATIONS.P1S
-    : null;
-}
-
-// Generation determination
-// * Every generation encompasses one or more applications
-const IS_GENERATION_PHASE_1 =
-  IS_APPLICATION_PHASE_1_MOBILE || IS_APPLICATION_PHASE_1_STANDARD;
-const IS_GENERATION_PHASE_2 = IS_APPLICATION_PHASE_2;
-const IS_GENERATION_PRESENTATION_LAYER =
-  IS_APPLICATION_PRESENTATION_LAYER_NEWS_WEB_APP ||
-  IS_APPLICATION_PRESENTATION_LAYER_NEWS_WEB;
-
-// Allow us to read the determined generation
-export function getGeneration(): GENERATIONS | null {
-  return IS_GENERATION_PRESENTATION_LAYER
-    ? GENERATIONS.PL
-    : IS_GENERATION_PHASE_2
-    ? GENERATIONS.P2
-    : IS_GENERATION_PHASE_1
-    ? GENERATIONS.P1
-    : null;
-}
-
-// Tier detection
-// * Tiers can be detected (depending on the generation) by matching unique hostnames
+// Shared constants & functions
 const HOSTNAME = window.location.hostname;
 const isPartialInHostname = (partialHostname: string): boolean =>
   HOSTNAME.indexOf(partialHostname) > -1;
-const IS_TIER_PREVIEW = isPartialInHostname(
-  IS_GENERATION_PRESENTATION_LAYER
-    ? 'preview.presentation-layer'
-    : 'nucwed.aus.aunty'
-);
-const IS_TIER_LIVE = !![
-  'www.abc',
-  'mobile.abc',
-  'bigted.abc',
-  'newsapp.abc',
-].find(isPartialInHostname);
+const areAnyPartialsInHostname = (partialHostnames: string[]): boolean =>
+  !!partialHostnames.find(isPartialInHostname);
+const isSelectable = (selector: string): boolean =>
+  !!document.querySelector(selector);
+const isGeneratedBy = (generatorName: string): boolean =>
+  isSelectable(`[name="generator"][content="${generatorName}"]`);
+const hasIconFrom = (slug: string): boolean =>
+  isSelectable(`[rel*="icon"][href^="/${slug}/"]`);
+const memoize = (fn: () => AGTN) => {
+  let cached: AGTN;
+  return () =>
+    typeof cached === 'undefined' ? ((cached = fn()), cached) : cached;
+};
 
-// Allow us to read the detected tier
-export function getTier(): TIERS | null {
-  return IS_TIER_PREVIEW ? TIERS.PREVIEW : IS_TIER_LIVE ? TIERS.LIVE : null;
-}
+// Application detection
+// * Because this code can potentially be executed by a <script> in the
+//   document's <head>, we can't rely on <body> (or late <head>) content to
+//   identify each application.
+// * Phase 1 Standard is the only application that uses Internet Explorer's
+//   conditional comments to use an alternative opening <html> tag.
+// * Phase 1 Mobile is the only application with a
+//   <meta name="HandheldFriendly"> tag.
+// * Phase 2 and most Presentation Layer applications have a
+//   <meta name="generator"> tag with a distinct "content" property value.
+// * Presentation Layer's News Web application doesn't have a
+//   <meta name="generator"> tag with a distinct "content" property value
+//   when rendering ABC News App articles, so we look for an icon <link>
+//   with a distinct asset path.
+// * Checks are made in order of likelihood, to save unnecessary DOM reads
+export const getApplication = memoize(
+  function _getApplication(): APPLICATIONS | null {
+    return hasIconFrom('news-web')
+      ? APPLICATIONS.PLN
+      : isSelectable('[name="HandheldFriendly"]')
+      ? APPLICATIONS.P1M
+      : document.childNodes[1].nodeType === Node.COMMENT_NODE
+      ? APPLICATIONS.P1S
+      : isGeneratedBy('WCMS FTL')
+      ? APPLICATIONS.P2
+      : isGeneratedBy('PL LIFE')
+      ? APPLICATIONS.PLL
+      : isGeneratedBy('PL CORE')
+      ? APPLICATIONS.PLC
+      : isGeneratedBy('PL ABC AMP')
+      ? APPLICATIONS.PLA
+      : null;
+  }
+);
+
+// Generation determination
+// * Every generation encompasses one or more applications
+export const getGeneration = memoize(
+  function _getGeneration(): GENERATIONS | null {
+    switch (getApplication()) {
+      case APPLICATIONS.PLA:
+      case APPLICATIONS.PLC:
+      case APPLICATIONS.PLL:
+      case APPLICATIONS.PLN:
+        return GENERATIONS.PL;
+      case APPLICATIONS.P2:
+        return GENERATIONS.P2;
+      case APPLICATIONS.P1M:
+      case APPLICATIONS.P1S:
+        return GENERATIONS.P1;
+      default:
+        return null;
+    }
+  }
+);
+
+// Tier detection
+// * Tiers can be detected (depending on the generation) by matching unique hostnames
+export const getTier = memoize(function _getTier(): TIERS | null {
+  return areAnyPartialsInHostname([
+    'nucwed.aus.aunty',
+    'preview.presentation-layer',
+  ])
+    ? TIERS.PREVIEW
+    : areAnyPartialsInHostname([
+        'www.abc',
+        'mobile.abc',
+        'bigted.abc',
+        'newsapp.abc',
+      ])
+    ? TIERS.LIVE
+    : null;
+});
 
 // Store references to PL decoy activation requests and granted DOM permits
 const decoyActivationRequests: DecoyActivationRequests = {};
 let domPermitsGranted: DOMPermit[] = [];
+let isGlobalRevocationHandlerBound = false;
 
 // Allow us to check when the document has fully loaded (and PL's DOM is hydrated, if present)
 export const whenDOMReady: Promise<void> = new Promise(resolve =>
@@ -148,6 +170,23 @@ export const whenDOMReady: Promise<void> = new Promise(resolve =>
   })()
 );
 
+// Listen for PL decoy deactivations and revoke previously granted DOM permits
+function bindGlobalRevocationHandler() {
+  window.addEventListener(PresentationLayerCustomEvents.DI, ({ detail }) => {
+    domPermitsGranted = domPermitsGranted.filter(({ key, onRevokeHandler }) => {
+      if (key !== detail.key) {
+        return true;
+      }
+
+      if (typeof onRevokeHandler === 'function') {
+        onRevokeHandler();
+      }
+
+      return false;
+    });
+  });
+}
+
 // Allow us to obtain a permit to modify the DOM at various points
 export function requestDOMPermit(
   key: DECOY_KEYS,
@@ -159,6 +198,11 @@ export function requestDOMPermit(
         // Revokable permits are only required in PL
         if (getGeneration() !== GENERATIONS.PL) {
           return resolve(true);
+        }
+
+        if (!isGlobalRevocationHandlerBound) {
+          isGlobalRevocationHandlerBound = true;
+          bindGlobalRevocationHandler();
         }
 
         // If this is the first permit requested for a location, we need
@@ -203,21 +247,4 @@ export function requestDOMPermit(
         });
       })
   );
-}
-
-if (IS_GENERATION_PRESENTATION_LAYER) {
-  // Listen for PL decoy deactivations and revoke previously granted DOM permits
-  window.addEventListener(PresentationLayerCustomEvents.DI, ({ detail }) => {
-    domPermitsGranted = domPermitsGranted.filter(({ key, onRevokeHandler }) => {
-      if (key !== detail.key) {
-        return true;
-      }
-
-      if (typeof onRevokeHandler === 'function') {
-        onRevokeHandler();
-      }
-
-      return false;
-    });
-  });
 }
