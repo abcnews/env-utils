@@ -52,7 +52,6 @@ console.log(APPLICATIONS);
 //     P2:  'p2',  // Phase 2
 //     PLA: 'pla', // Presentation Layer ABC AMP
 //     PLC: 'plc', // Presentation Layer Core
-//     PLL: 'pll', // Presentation Layer Life
 //     PLN: 'pln', // Presentation Layer News Web
 //   }
 console.log(GENERATIONS);
@@ -70,7 +69,7 @@ console.log(TIERS);
 
 ### `getApplication(): string | null`
 
-Return the environment's **application** (Phase 1 Mobile; Phase 1 Standard; Phase 2; Presentation Layer ABC AMP; Presentation Layer Core; Presentation Layer Life; Presentation Layer News Web) as a string value from the `APPLICATIONS` enum, or `null` if the application couldn't be determined.
+Return the environment's **application** (Phase 1 Mobile; Phase 1 Standard; Phase 2; Presentation Layer ABC AMP; Presentation Layer Core; Presentation Layer News Web) as a string value from the `APPLICATIONS` enum, or `null` if the application couldn't be determined.
 
 ```js
 import { APPLICATIONS, getApplication } from '@abcnews/env-utils';
