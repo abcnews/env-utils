@@ -57,6 +57,9 @@ declare global {
     [PresentationLayerCustomEvents.DA]: CustomEvent<DecoyEventDetail>;
     [PresentationLayerCustomEvents.DI]: CustomEvent<DecoyEventDetail>;
   }
+  interface Window {
+    __ODYSSEY__?: unknown;
+  }
 }
 
 // Shared constants & functions
@@ -169,6 +172,13 @@ export const whenDOMReady: Promise<void> = new Promise(resolve =>
         );
   })()
 );
+
+// Allow us to check for when Odyssey is loaded
+export const whenOdysseyLoaded = new Promise(resolve => {
+  window.__ODYSSEY__
+    ? resolve(window.__ODYSSEY__)
+    : window.addEventListener('odyssey:api', () => resolve(window.__ODYSSEY__));
+});
 
 // Listen for PL decoy deactivations and revoke previously granted DOM permits
 function bindGlobalRevocationHandler() {
