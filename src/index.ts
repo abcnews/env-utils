@@ -4,6 +4,7 @@ export enum APPLICATIONS {
   P2 = 'p2',
   PLA = 'pla',
   PLC = 'plc',
+  PLE = 'ple',
   PLL = 'pll',
   PLN = 'pln',
 }
@@ -105,6 +106,8 @@ export const getApplication = memoize(
       ? APPLICATIONS.P1S
       : isGeneratedBy('WCMS FTL')
       ? APPLICATIONS.P2
+      : isGeneratedBy('PL Everyday')
+      ? APPLICATIONS.PLE
       : isGeneratedBy('PL LIFE')
       ? APPLICATIONS.PLL
       : isGeneratedBy('PL CORE')
@@ -122,6 +125,7 @@ export const getGeneration = memoize(
     switch (getApplication()) {
       case APPLICATIONS.PLA:
       case APPLICATIONS.PLC:
+      case APPLICATIONS.PLE:
       case APPLICATIONS.PLL:
       case APPLICATIONS.PLN:
         return GENERATIONS.PL;
