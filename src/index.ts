@@ -145,7 +145,7 @@ export const getGeneration = memoize(
 export const getTier = memoize(function _getTier(): TIERS | null {
   return areAnyPartialsInHostname([
     'nucwed.aus.aunty',
-    'preview.presentation-layer',
+    'presentation-layer.abc',
   ])
     ? TIERS.PREVIEW
     : areAnyPartialsInHostname([
