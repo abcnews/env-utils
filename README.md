@@ -52,6 +52,7 @@ console.log(APPLICATIONS);
 //     P2:  'p2',  // Phase 2
 //     PLA: 'pla', // Presentation Layer ABC AMP
 //     PLC: 'plc', // Presentation Layer Core
+//     PLE: 'ple', // Presentation Layer Everyday
 //     PLL: 'pll', // Presentation Layer Life
 //     PLN: 'pln', // Presentation Layer News Web
 //   }
