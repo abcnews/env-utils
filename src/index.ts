@@ -35,16 +35,16 @@ enum PresentationLayerCustomEvents {
 }
 
 type DOMPermit = {
-  key: DECOY_KEYS;
+  key: string;
   onRevokeHandler?: Function;
 };
 
 type DecoyActivationRequests = {
-  [key in DECOY_KEYS]?: Promise<void>;
+  [key: string]: Promise<void>;
 };
 
 interface DecoyEventDetail {
-  key: DECOY_KEYS;
+  key: string;
   active?: boolean;
 }
 
@@ -203,7 +203,7 @@ function bindGlobalRevocationHandler() {
 
 // Allow us to obtain a permit to modify the DOM at various points
 export function requestDOMPermit(
-  key: DECOY_KEYS,
+  key: string,
   onRevokeHandler?: Function
 ): Promise<true | void> {
   return whenDOMReady.then(
