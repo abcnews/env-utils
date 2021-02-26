@@ -44,14 +44,14 @@
     "access": "public"
   },
   "devDependencies": {
-    "@babel/core": "^7.12.9",
-    "@types/jest": "^24.0.21",
+    "@babel/core": "^7.13.1",
+    "@types/jest": "^26.0.20",
     "@types/text-encoding": "0.0.35",
-    "husky": "^3.0.9",
-    "np": "^6.5.0",
-    "rollup": "^2.34.0",
-    "tsdx": "^0.13.3",
-    "tslib": "^1.14.1",
-    "typescript": "^3.9.7"
+    "husky": "^5.1.1",
+    "np": "^7.4.0",
+    "rollup": "^2.39.1",
+    "tsdx": "^0.14.1",
+    "tslib": "^2.1.0",
+    "typescript": "^4.2.2"
   }
 }
