@@ -24,6 +24,7 @@
     "start": "tsdx watch",
     "build": "tsdx build",
     "lint": "tsdx lint src",
+    "test": "tsdx test",
     "prepublishOnly": "npm run build",
     "release": "np"
   },

@@ -20,7 +20,12 @@ export enum TIERS {
   PREVIEW = 'preview',
 }
 
-type AGTN = APPLICATIONS | GENERATIONS | TIERS | null;
+export enum ENVIRONMENTS {
+  UAT = 'uat',
+  PROD = 'prod',
+}
+
+type AGTNE = APPLICATIONS | GENERATIONS | TIERS | ENVIRONMENTS | null;
 
 export enum DECOY_KEYS {
   ARTICLE = 'article',
@@ -64,9 +69,8 @@ declare global {
 }
 
 // Shared constants & functions
-const HOSTNAME = window.location.hostname;
 const isPartialInHostname = (partialHostname: string): boolean =>
-  HOSTNAME.indexOf(partialHostname) > -1;
+  window.location.hostname.indexOf(partialHostname) > -1;
 const areAnyPartialsInHostname = (partialHostnames: string[]): boolean =>
   !!partialHostnames.find(isPartialInHostname);
 const isSelectable = (selector: string): boolean =>
@@ -75,10 +79,14 @@ const isGeneratedBy = (generatorName: string): boolean =>
   isSelectable(`[name="generator"][content="${generatorName}"]`);
 const hasIconFrom = (slug: string): boolean =>
   isSelectable(`[rel*="icon"][href^="/${slug}/"]`);
-const memoize = (fn: () => AGTN) => {
-  let cached: AGTN;
-  return () =>
-    typeof cached === 'undefined' ? ((cached = fn()), cached) : cached;
+const memoize = (fn: () => AGTNE) => {
+  let cached: AGTNE;
+  return (cache: boolean = true) =>
+    cache
+      ? typeof cached === 'undefined'
+        ? ((cached = fn()), cached)
+        : cached
+      : fn();
 };
 
 // Application detection
@@ -148,15 +156,22 @@ export const getTier = memoize(function _getTier(): TIERS | null {
     'presentation-layer.abc',
   ])
     ? TIERS.PREVIEW
-    : areAnyPartialsInHostname([
-        'www.abc',
-        'mobile.abc',
-        'bigted.abc',
-        'newsapp.abc',
-      ])
+    : areAnyPartialsInHostname(['www.abc', 'mobile.abc', 'newsapp.abc'])
     ? TIERS.LIVE
     : null;
 });
+
+// Environment detection
+// * Environments can be detected by matching host names
+export const getEnvironment = memoize(
+  function _getEnvironment(): ENVIRONMENTS | null {
+    return areAnyPartialsInHostname(['developer.presentation-layer'])
+      ? ENVIRONMENTS.UAT
+      : getTier() === TIERS.LIVE || getTier() === TIERS.PREVIEW
+      ? ENVIRONMENTS.PROD
+      : null;
+  }
+);
 
 // Store references to PL decoy activation requests and granted DOM permits
 const decoyActivationRequests: DecoyActivationRequests = {};
