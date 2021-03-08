@@ -102,7 +102,7 @@ export const getApplication = memoize(
       ? APPLICATIONS.PLN
       : isSelectable('[name="HandheldFriendly"]')
       ? APPLICATIONS.P1M
-      : document.childNodes[1].nodeType === Node.COMMENT_NODE
+      : (document.childNodes[1] || {}).nodeType === Node.COMMENT_NODE
       ? APPLICATIONS.P1S
       : isGeneratedBy('WCMS FTL')
       ? APPLICATIONS.P2
