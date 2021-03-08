@@ -1,0 +1,9 @@
+*.log
+.DS_Store
+node_modules
+*.test.*
+.gitignore
+.husky
+.tsconfig.json
+dist
+.envrc

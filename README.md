@@ -141,6 +141,10 @@ requestDOMPermit(DECOY_KEYS.PAGE, () => {
 });
 ```
 
+The returned promise resolves differently depending on the `GENERATION` on which it's running. On Presentation Layer sites the promise will resolve with an array of `HTMLElement` references for all the nodes where the decoy was activated. On prior generations, it will resolve with `true`.
+
+The promise will be rejected after 5 seconds if all expected decoys haven't been activated. Additionally, the library will attempt to undo any successful activations by sending another request to PL to deactivate decoys with the given key.
+
 ## Authors
 
 - Colin Gourlay ([Gourlay.Colin@abc.net.au](mailto:Gourlay.Colin@abc.net.au))

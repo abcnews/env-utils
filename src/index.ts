@@ -43,7 +43,7 @@ type DOMPermit = {
 };
 
 type DecoyActivationRequests = {
-  [key: string]: Promise<void>;
+  [key: string]: Promise<HTMLElement[]>;
 };
 
 interface DecoyEventDetail {
@@ -218,7 +218,7 @@ function bindGlobalRevocationHandler() {
 export function requestDOMPermit(
   key: string,
   onRevokeHandler?: Function
-): Promise<true | void> {
+): Promise<true | HTMLElement[]> {
   return whenDOMReady.then(
     () =>
       new Promise(resolve => {
@@ -235,50 +235,77 @@ export function requestDOMPermit(
         // If this is the first permit requested for a location, we need
         // to request a decoy activation before granting the permit
         if (decoyActivationRequests[key] == null) {
-          decoyActivationRequests[key] = new Promise<void>(resolve => {
-            let expectedRemainingActivations = document.querySelectorAll(
-              `[data-key=${key}]`
-            ).length;
+          decoyActivationRequests[key] = new Promise<HTMLElement[]>(
+            (resolve, reject) => {
+              const expectedActivations = document.querySelectorAll(
+                `[data-key=${key}]`
+              ).length;
 
-            // Handler should only run once per correct key, then stop listening
-            function onDecoyActiveHandler({ detail }: DecoyEvent) {
-              if (detail.key !== key) {
-                return;
+              const activatedElements: HTMLElement[] = [];
+
+              // Handler should only run once per correct key, then stop listening
+              function onDecoyActiveHandler({ detail }: DecoyEvent) {
+                if (detail.key !== key) {
+                  return;
+                }
+
+                Array.from(
+                  document.querySelectorAll<HTMLDivElement>(
+                    `[data-key=${key}][data-clone=true]:not([data-claimed=true])`
+                  )
+                ).forEach(async el => {
+                  el.dataset['claimed'] = 'true';
+                  activatedElements.push(el);
+                });
+
+                if (expectedActivations > activatedElements.length) {
+                  return;
+                }
+
+                window.clearTimeout(timeoutId);
+                window.removeEventListener(
+                  PresentationLayerCustomEvents.DA,
+                  onDecoyActiveHandler
+                );
+                resolve(activatedElements);
               }
 
-              if (expectedRemainingActivations-- > 0) {
-                return;
-              }
+              const timeoutId = window.setTimeout(() => {
+                window.removeEventListener(
+                  PresentationLayerCustomEvents.DA,
+                  onDecoyActiveHandler
+                );
+                window.dispatchEvent(
+                  new CustomEvent<DecoyEventDetail>('decoy', {
+                    detail: { key, active: false },
+                  })
+                );
+                reject(new Error(`Decoy activation timeout for key '${key}'`));
+              }, 5000);
 
-              window.removeEventListener(
+              window.addEventListener(
                 PresentationLayerCustomEvents.DA,
                 onDecoyActiveHandler
               );
-              resolve();
+
+              // Request decoy activation by dispatching an event that PL will be listening for
+              window.dispatchEvent(
+                new CustomEvent<DecoyEventDetail>('decoy', {
+                  detail: { key, active: true },
+                })
+              );
             }
-
-            window.addEventListener(
-              PresentationLayerCustomEvents.DA,
-              onDecoyActiveHandler
-            );
-
-            // Request decoy activation by dispatching an event that PL will be listening for
-            window.dispatchEvent(
-              new CustomEvent<DecoyEventDetail>('decoy', {
-                detail: { key, active: true },
-              })
-            );
-          });
+          );
         }
 
         // Grant the permit if/when the decoy is active, and store a
         // reference so that a revocation handler can be called
         // when PL decides to deactivate the decoy
-        decoyActivationRequests[key]!.then(() => {
+        decoyActivationRequests[key]!.then(els => {
           domPermitsGranted = domPermitsGranted.concat([
             { key, onRevokeHandler },
           ]);
-          resolve();
+          resolve(els);
         });
       })
   );
