@@ -236,9 +236,17 @@ export function requestDOMPermit(
         // to request a decoy activation before granting the permit
         if (decoyActivationRequests[key] == null) {
           decoyActivationRequests[key] = new Promise<void>(resolve => {
+            let expectedRemainingActivations = document.querySelectorAll(
+              `[data-key=${key}]`
+            ).length;
+
             // Handler should only run once per correct key, then stop listening
             function onDecoyActiveHandler({ detail }: DecoyEvent) {
               if (detail.key !== key) {
+                return;
+              }
+
+              if (expectedRemainingActivations-- > 0) {
                 return;
               }
 
