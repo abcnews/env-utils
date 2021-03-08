@@ -25,8 +25,6 @@ export enum ENVIRONMENTS {
   PROD = 'prod',
 }
 
-type AGTNE = APPLICATIONS | GENERATIONS | TIERS | ENVIRONMENTS | null;
-
 export enum DECOY_KEYS {
   ARTICLE = 'article',
   BODY = 'body',
@@ -79,8 +77,8 @@ const isGeneratedBy = (generatorName: string): boolean =>
   isSelectable(`[name="generator"][content="${generatorName}"]`);
 const hasIconFrom = (slug: string): boolean =>
   isSelectable(`[rel*="icon"][href^="/${slug}/"]`);
-const memoize = (fn: () => AGTNE) => {
-  let cached: AGTNE;
+const memoize = <T>(fn: () => T) => {
+  let cached: T;
   return (cache: boolean = true) =>
     cache
       ? typeof cached === 'undefined'
