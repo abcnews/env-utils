@@ -77,14 +77,14 @@ const isGeneratedBy = (generatorName: string): boolean =>
   isSelectable(`[name="generator"][content="${generatorName}"]`);
 const hasIconFrom = (slug: string): boolean =>
   isSelectable(`[rel*="icon"][href^="/${slug}/"]`);
-const memoize = <T>(fn: () => T) => {
+const memoize = <T>(fn: (cache?: boolean) => T) => {
   let cached: T;
   return (cache: boolean = true) =>
     cache
       ? typeof cached === 'undefined'
-        ? ((cached = fn()), cached)
+        ? ((cached = fn(cache)), cached)
         : cached
-      : fn();
+      : fn(cache);
 };
 
 // Application detection
@@ -126,25 +126,25 @@ export const getApplication = memoize(
 
 // Generation determination
 // * Every generation encompasses one or more applications
-export const getGeneration = memoize(
-  function _getGeneration(): GENERATIONS | null {
-    switch (getApplication()) {
-      case APPLICATIONS.PLA:
-      case APPLICATIONS.PLC:
-      case APPLICATIONS.PLE:
-      case APPLICATIONS.PLL:
-      case APPLICATIONS.PLN:
-        return GENERATIONS.PL;
-      case APPLICATIONS.P2:
-        return GENERATIONS.P2;
-      case APPLICATIONS.P1M:
-      case APPLICATIONS.P1S:
-        return GENERATIONS.P1;
-      default:
-        return null;
-    }
+export const getGeneration = memoize(function _getGeneration(
+  cache = true
+): GENERATIONS | null {
+  switch (getApplication(cache)) {
+    case APPLICATIONS.PLA:
+    case APPLICATIONS.PLC:
+    case APPLICATIONS.PLE:
+    case APPLICATIONS.PLL:
+    case APPLICATIONS.PLN:
+      return GENERATIONS.PL;
+    case APPLICATIONS.P2:
+      return GENERATIONS.P2;
+    case APPLICATIONS.P1M:
+    case APPLICATIONS.P1S:
+      return GENERATIONS.P1;
+    default:
+      return null;
   }
-);
+});
 
 // Tier detection
 // * Tiers can be detected (depending on the generation) by matching unique hostnames
@@ -161,15 +161,15 @@ export const getTier = memoize(function _getTier(): TIERS | null {
 
 // Environment detection
 // * Environments can be detected by matching host names
-export const getEnvironment = memoize(
-  function _getEnvironment(): ENVIRONMENTS | null {
-    return areAnyPartialsInHostname(['developer.presentation-layer'])
-      ? ENVIRONMENTS.UAT
-      : getTier() === TIERS.LIVE || getTier() === TIERS.PREVIEW
-      ? ENVIRONMENTS.PROD
-      : null;
-  }
-);
+export const getEnvironment = memoize(function _getEnvironment(
+  cache = true
+): ENVIRONMENTS | null {
+  return areAnyPartialsInHostname(['developer.presentation-layer'])
+    ? ENVIRONMENTS.UAT
+    : getTier(cache) === TIERS.LIVE || getTier(cache) === TIERS.PREVIEW
+    ? ENVIRONMENTS.PROD
+    : null;
+});
 
 // Store references to PL decoy activation requests and granted DOM permits
 const decoyActivationRequests: DecoyActivationRequests = {};
@@ -223,7 +223,7 @@ export function requestDOMPermit(
     () =>
       new Promise(resolve => {
         // Revokable permits are only required in PL
-        if (getGeneration() !== GENERATIONS.PL) {
+        if (getGeneration(false) !== GENERATIONS.PL) {
           return resolve(true);
         }
 
