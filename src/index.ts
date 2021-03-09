@@ -4,6 +4,7 @@ export enum APPLICATIONS {
   P2 = 'p2',
   PLA = 'pla',
   PLC = 'plc',
+  PLE = 'ple',
   PLN = 'pln',
 }
 
@@ -18,7 +19,10 @@ export enum TIERS {
   PREVIEW = 'preview',
 }
 
-type AGTN = APPLICATIONS | GENERATIONS | TIERS | null;
+export enum ENVIRONMENTS {
+  UAT = 'uat',
+  PROD = 'prod',
+}
 
 export enum DECOY_KEYS {
   ARTICLE = 'article',
@@ -33,16 +37,16 @@ enum PresentationLayerCustomEvents {
 }
 
 type DOMPermit = {
-  key: DECOY_KEYS;
+  key: string;
   onRevokeHandler?: Function;
 };
 
 type DecoyActivationRequests = {
-  [key in DECOY_KEYS]?: Promise<void>;
+  [key: string]: Promise<HTMLElement[]>;
 };
 
 interface DecoyEventDetail {
-  key: DECOY_KEYS;
+  key: string;
   active?: boolean;
 }
 
@@ -56,12 +60,14 @@ declare global {
     [PresentationLayerCustomEvents.DA]: CustomEvent<DecoyEventDetail>;
     [PresentationLayerCustomEvents.DI]: CustomEvent<DecoyEventDetail>;
   }
+  interface Window {
+    __ODYSSEY__?: unknown;
+  }
 }
 
 // Shared constants & functions
-const HOSTNAME = window.location.hostname;
 const isPartialInHostname = (partialHostname: string): boolean =>
-  HOSTNAME.indexOf(partialHostname) > -1;
+  window.location.hostname.indexOf(partialHostname) > -1;
 const areAnyPartialsInHostname = (partialHostnames: string[]): boolean =>
   !!partialHostnames.find(isPartialInHostname);
 const isSelectable = (selector: string): boolean =>
@@ -70,10 +76,14 @@ const isGeneratedBy = (generatorName: string): boolean =>
   isSelectable(`[name="generator"][content="${generatorName}"]`);
 const hasIconFrom = (slug: string): boolean =>
   isSelectable(`[rel*="icon"][href^="/${slug}/"]`);
-const memoize = (fn: () => AGTN) => {
-  let cached: AGTN;
-  return () =>
-    typeof cached === 'undefined' ? ((cached = fn()), cached) : cached;
+const memoize = <T>(fn: () => T) => {
+  let cached: T;
+  return (cache: boolean = true) =>
+    cache
+      ? typeof cached === 'undefined'
+        ? ((cached = fn()), cached)
+        : cached
+      : fn();
 };
 
 // Application detection
@@ -97,10 +107,12 @@ export const getApplication = memoize(
       ? APPLICATIONS.PLN
       : isSelectable('[name="HandheldFriendly"]')
       ? APPLICATIONS.P1M
-      : document.childNodes[1].nodeType === Node.COMMENT_NODE
+      : (document.childNodes[1] || {}).nodeType === Node.COMMENT_NODE
       ? APPLICATIONS.P1S
       : isGeneratedBy('WCMS FTL')
       ? APPLICATIONS.P2
+      : isGeneratedBy('PL Everyday')
+      ? APPLICATIONS.PLE
       : isGeneratedBy('PL CORE')
       ? APPLICATIONS.PLC
       : isGeneratedBy('PL ABC AMP')
@@ -116,6 +128,7 @@ export const getGeneration = memoize(
     switch (getApplication()) {
       case APPLICATIONS.PLA:
       case APPLICATIONS.PLC:
+      case APPLICATIONS.PLE:
       case APPLICATIONS.PLN:
         return GENERATIONS.PL;
       case APPLICATIONS.P2:
@@ -134,18 +147,25 @@ export const getGeneration = memoize(
 export const getTier = memoize(function _getTier(): TIERS | null {
   return areAnyPartialsInHostname([
     'nucwed.aus.aunty',
-    'preview.presentation-layer',
+    'presentation-layer.abc',
   ])
     ? TIERS.PREVIEW
-    : areAnyPartialsInHostname([
-        'www.abc',
-        'mobile.abc',
-        'bigted.abc',
-        'newsapp.abc',
-      ])
+    : areAnyPartialsInHostname(['www.abc', 'mobile.abc', 'newsapp.abc'])
     ? TIERS.LIVE
     : null;
 });
+
+// Environment detection
+// * Environments can be detected by matching host names
+export const getEnvironment = memoize(
+  function _getEnvironment(): ENVIRONMENTS | null {
+    return areAnyPartialsInHostname(['developer.presentation-layer'])
+      ? ENVIRONMENTS.UAT
+      : getTier() === TIERS.LIVE || getTier() === TIERS.PREVIEW
+      ? ENVIRONMENTS.PROD
+      : null;
+  }
+);
 
 // Store references to PL decoy activation requests and granted DOM permits
 const decoyActivationRequests: DecoyActivationRequests = {};
@@ -166,6 +186,13 @@ export const whenDOMReady: Promise<void> = new Promise(resolve =>
   })()
 );
 
+// Allow us to check for when Odyssey is loaded
+export const whenOdysseyLoaded = new Promise(resolve => {
+  window.__ODYSSEY__
+    ? resolve(window.__ODYSSEY__)
+    : window.addEventListener('odyssey:api', () => resolve(window.__ODYSSEY__));
+});
+
 // Listen for PL decoy deactivations and revoke previously granted DOM permits
 function bindGlobalRevocationHandler() {
   window.addEventListener(PresentationLayerCustomEvents.DI, ({ detail }) => {
@@ -185,9 +212,9 @@ function bindGlobalRevocationHandler() {
 
 // Allow us to obtain a permit to modify the DOM at various points
 export function requestDOMPermit(
-  key: DECOY_KEYS,
+  key: string,
   onRevokeHandler?: Function
-): Promise<true | void> {
+): Promise<true | HTMLElement[]> {
   return whenDOMReady.then(
     () =>
       new Promise(resolve => {
@@ -204,42 +231,77 @@ export function requestDOMPermit(
         // If this is the first permit requested for a location, we need
         // to request a decoy activation before granting the permit
         if (decoyActivationRequests[key] == null) {
-          decoyActivationRequests[key] = new Promise<void>(resolve => {
-            // Handler should only run once per correct key, then stop listening
-            function onDecoyActiveHandler({ detail }: DecoyEvent) {
-              if (detail.key !== key) {
-                return;
+          decoyActivationRequests[key] = new Promise<HTMLElement[]>(
+            (resolve, reject) => {
+              const expectedActivations = document.querySelectorAll(
+                `[data-key=${key}]`
+              ).length;
+
+              const activatedElements: HTMLElement[] = [];
+
+              // Handler should only run once per correct key, then stop listening
+              function onDecoyActiveHandler({ detail }: DecoyEvent) {
+                if (detail.key !== key) {
+                  return;
+                }
+
+                Array.from(
+                  document.querySelectorAll<HTMLDivElement>(
+                    `[data-key=${key}][data-clone=true]:not([data-claimed=true])`
+                  )
+                ).forEach(async el => {
+                  el.dataset['claimed'] = 'true';
+                  activatedElements.push(el);
+                });
+
+                if (expectedActivations > activatedElements.length) {
+                  return;
+                }
+
+                window.clearTimeout(timeoutId);
+                window.removeEventListener(
+                  PresentationLayerCustomEvents.DA,
+                  onDecoyActiveHandler
+                );
+                resolve(activatedElements);
               }
 
-              window.removeEventListener(
+              const timeoutId = window.setTimeout(() => {
+                window.removeEventListener(
+                  PresentationLayerCustomEvents.DA,
+                  onDecoyActiveHandler
+                );
+                window.dispatchEvent(
+                  new CustomEvent<DecoyEventDetail>('decoy', {
+                    detail: { key, active: false },
+                  })
+                );
+                reject(new Error(`Decoy activation timeout for key '${key}'`));
+              }, 5000);
+
+              window.addEventListener(
                 PresentationLayerCustomEvents.DA,
                 onDecoyActiveHandler
               );
-              resolve();
+
+              // Request decoy activation by dispatching an event that PL will be listening for
+              window.dispatchEvent(
+                new CustomEvent<DecoyEventDetail>('decoy', {
+                  detail: { key, active: true },
+                })
+              );
             }
-
-            window.addEventListener(
-              PresentationLayerCustomEvents.DA,
-              onDecoyActiveHandler
-            );
-
-            // Request decoy activation by dispatching an event that PL will be listening for
-            window.dispatchEvent(
-              new CustomEvent<DecoyEventDetail>('decoy', {
-                detail: { key, active: true },
-              })
-            );
-          });
+          );
         }
 
         // Grant the permit if/when the decoy is active, and store a
         // reference so that a revocation handler can be called
         // when PL decides to deactivate the decoy
-        decoyActivationRequests[key]!.then(() => {
+        decoyActivationRequests[key]!.then(els => {
           domPermitsGranted = domPermitsGranted.concat([
             { key, onRevokeHandler },
           ]);
-          resolve();
+          resolve(els);
         });
       })
   );
