@@ -7,3 +7,4 @@ node_modules
 .tsconfig.json
 dist
 .envrc
+.husky
