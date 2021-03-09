@@ -125,19 +125,25 @@ This is advised before modifying the DOM on Presentation Layer generation applic
 
 DOM modification is usually safe on older generation applications, but permits should be requested anyway, for the sake of consistency.
 
-The `key` argument is used by Presentation Layer to activate its respective `<Decoy>` component.
+The `key` argument is used by Presentation Layer to activate its respective `<Decoy>` components.
 
-An optional `onRevokeHandler` argument can be passed, which will be called if Presentation Layer chooses to deactivate the `<Decoy>` and restore its orignal DOM.
+An optional `onRevokeHandler` argument can be passed, which will be called if Presentation Layer chooses to deactivate `<Decoy>`s and restore their orignal DOM.
+
+Note: `key` values may be any `[a-z]` string, but the Presentation Layer News Web application provides several pre-determined values, which this library exposes as `DECOY_KEYS`.
 
 ```js
 import { DECOY_KEYS, requestDOMPermit } from '@abcnews/env-utils';
 
 requestDOMPermit(DECOY_KEYS.PAGE, () => {
-  // It is no longer safe to modify the DOM tree below the <Decoy key="page"> PL compoonent
+  // It is no longer safe to modify the DOM tree below <Decoy listenKey="page"> PL compoonents
 }).then(() => {
-  // It is now safe to modify the DOM tree below the <Decoy key="page"> PL compoonent
+  // It is now safe to modify the DOM tree below <Decoy listenKey="page"> PL compoonents
 });
 ```
+
+The returned promise resolves differently depending on the `GENERATION` on which it's running. On Presentation Layer sites the promise will resolve with an array of `HTMLElement` references for all the nodes where the decoy was activated. On prior generations, it will resolve with `true`.
+
+The promise will be rejected after 5 seconds if all expected decoys haven't been activated. Additionally, the library will attempt to undo any successful activations by sending another request to PL to deactivate decoys with the given key.
 
 ## Authors
 
