@@ -152,6 +152,21 @@ A promise that resolves when the DOM is ready. On Presentation Layer documents t
 
 A promise that resolves when Odyssey is finished loading. This will resolve with a reference to the Odyssey API.
 
+## Development
+
+This repo uses tsdx for development and np for releases.
+
+Everything you need should be in the npm scripts:
+
+```bash
+npm start
+npm test
+npm run release
+```
+
+Running tests requires some environment variables be set. The canonical version of these env vars are stored as secrets in GitHub, but if you need them to run tests locally, chat to one of the authors listed below.
+
 ## Authors
 
 - Colin Gourlay ([Gourlay.Colin@abc.net.au](mailto:Gourlay.Colin@abc.net.au))
+- Simon Elvery ([elvery.simon@abc.net.au](mailto:elvery.simon@abc.net.au))

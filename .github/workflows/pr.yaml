@@ -1,0 +1,46 @@
+name: Test and build PR
+on: [pull_request]
+jobs:
+  build:
+    name: Build, lint, and test on Node ${{ matrix.node }} and ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        node: ['14.x']
+        os: [windows-latest, macOS-latest]
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Use Node ${{ matrix.node }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Install deps and build (with cache)
+        uses: bahmutov/npm-install@v1
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        env:
+          DOMAIN_PROD_PREVIEW: ${{ secrets.DOMAIN_PROD_PREVIEW }}
+          DOMAIN_PROD_DEVELOPER: ${{ secrets.DOMAIN_PROD_DEVELOPER }}
+          DOMAIN_NUCWED: ${{ secrets.DOMAIN_NUCWED }}
+          DOMAIN_AMP_PREVIEW: ${{ secrets.DOMAIN_AMP_PREVIEW }}
+
+        run: npm test --ci --coverage --maxWorkers=2
+
+      - name: Build
+        run: npm build
+  size:
+    runs-on: ubuntu-latest
+    env:
+      CI_JOB_NUMBER: 1
+    steps:
+      - uses: actions/checkout@v1
+      - uses: andresz1/size-limit-action@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
