@@ -1,9 +1,12 @@
 import {
   APPLICATIONS,
   ENVIRONMENTS,
+  GENERATIONS,
   getApplication,
   getEnvironment,
+  getGeneration,
   getTier,
+  requestDOMPermit,
   TIERS,
 } from './index';
 
@@ -78,5 +81,67 @@ describe('getApplication', () => {
     document.insertBefore(comment, document.childNodes[1]);
     expect(getApplication(false)).toBe(APPLICATIONS.P1S);
     document.removeChild(comment);
+  });
+
+  test('PL AMP', () => {
+    document.head.innerHTML =
+      '<meta data-react-helmet="true" name="generator" content="PL ABC AMP">';
+    expect(getApplication(false)).toBe(APPLICATIONS.PLA);
+    document.head.innerHTML = '';
+  });
+});
+
+describe('getGeneration', () => {
+  test('should return PL for a PL application', () => {
+    document.head.innerHTML =
+      '<meta data-react-helmet="true" name="generator" content="PL ABC AMP">';
+    expect(getGeneration(false)).toBe(GENERATIONS.PL);
+    document.head.innerHTML = '';
+  });
+});
+
+declare global {
+  interface Window {
+    articleHydrated?: boolean;
+  }
+}
+
+describe('requestDOMPermit', () => {
+  window.articleHydrated = true;
+  test('should return a promise', () => {
+    expect(requestDOMPermit('key')).toBeInstanceOf(Promise);
+  });
+
+  test('should return true straight away on non-PL pages', () => {
+    const key = 'key';
+    return requestDOMPermit(key).then(res => {
+      expect(res).toBe(true);
+    });
+  });
+
+  test('should trigger a "decoy" event and resolve with decoyed elements', () => {
+    const key = 'key';
+    const el = document.createElement('div');
+    el.dataset.key = key;
+    el.dataset.clone = 'true';
+    document.head.innerHTML =
+      '<meta data-react-helmet="true" name="generator" content="PL Everyday">';
+
+    document.body.appendChild(el);
+
+    const listener = jest.fn(() => {
+      window.dispatchEvent(
+        new CustomEvent('decoyActive', {
+          detail: { key },
+        })
+      );
+    });
+    window.addEventListener('decoy', listener);
+    return requestDOMPermit(key).then(res => {
+      expect(listener).toHaveBeenCalled();
+      expect(res).toEqual([el]);
+      document.head.innerHTML = '';
+      document.body.innerHTML = '';
+    });
   });
 });
