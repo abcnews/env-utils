@@ -70,5 +70,13 @@ describe('getApplication', () => {
   test('Phase 1 mobile', () => {
     document.head.innerHTML = '<meta name="HandheldFriendly" content="true"/>';
     expect(getApplication(false)).toBe(APPLICATIONS.P1M);
+    document.head.innerHTML = '';
+  });
+
+  test('Phase 1 standard', () => {
+    const comment = document.createComment('COMMENT');
+    document.insertBefore(comment, document.childNodes[1]);
+    expect(getApplication(false)).toBe(APPLICATIONS.P1S);
+    document.removeChild(comment);
   });
 });

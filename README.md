@@ -145,6 +145,21 @@ The returned promise resolves differently depending on the `GENERATION` on which
 
 The promise will be rejected after 5 seconds if all expected decoys haven't been activated. Additionally, the library will attempt to undo any successful activations by sending another request to PL to deactivate decoys with the given key.
 
+## Development
+
+This repo uses tsdx for development and np for releases.
+
+Everything you need should be in the npm scripts:
+
+```bash
+npm start
+npm test
+npm run release
+```
+
+Running tests requires some environment variables be set. The canonical version of these env vars are stored as secrets in GitHub, but if you need them to run tests locally, chat to one of the authors listed below.
+
 ## Authors
 
 - Colin Gourlay ([Gourlay.Colin@abc.net.au](mailto:Gourlay.Colin@abc.net.au))
+- Simon Elvery ([elvery.simon@abc.net.au](mailto:elvery.simon@abc.net.au))
