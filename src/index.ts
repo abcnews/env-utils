@@ -249,7 +249,7 @@ export function requestDOMPermit(
                   document.querySelectorAll<HTMLDivElement>(
                     `[data-key=${key}][data-clone=true]:not([data-claimed=true])`
                   )
-                ).forEach(async el => {
+                ).forEach(el => {
                   el.dataset['claimed'] = 'true';
                   activatedElements.push(el);
                 });
