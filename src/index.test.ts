@@ -89,6 +89,13 @@ describe('getApplication', () => {
     expect(getApplication(false)).toBe(APPLICATIONS.PLA);
     document.head.innerHTML = '';
   });
+
+  test('PL NEWS WEB', () => {
+    document.head.innerHTML =
+      '<meta data-react-helmet="true" name="generator" content="PL NEWS WEB">';
+    expect(getApplication(false)).toBe(APPLICATIONS.PLN);
+    document.head.innerHTML = '';
+  });
 });
 
 describe('getGeneration', () => {
