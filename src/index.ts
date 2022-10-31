@@ -74,8 +74,6 @@ const isSelectable = (selector: string): boolean =>
   !!document.querySelector(selector);
 const isGeneratedBy = (generatorName: string): boolean =>
   isSelectable(`[name="generator"][content="${generatorName}"]`);
-const hasIconFrom = (slug: string): boolean =>
-  isSelectable(`[rel*="icon"][href^="/${slug}/"]`);
 const memoize = <T>(fn: (cache?: boolean) => T) => {
   let cached: T;
   return (cache: boolean = true) =>
@@ -96,14 +94,10 @@ const memoize = <T>(fn: (cache?: boolean) => T) => {
 //   <meta name="HandheldFriendly"> tag.
 // * Phase 2 and most Presentation Layer applications have a
 //   <meta name="generator"> tag with a distinct "content" property value.
-// * Presentation Layer's News Web application doesn't have a
-//   <meta name="generator"> tag with a distinct "content" property value
-//   when rendering ABC News App articles, so we look for an icon <link>
-//   with a distinct asset path.
 // * Checks are made in order of likelihood, to save unnecessary DOM reads
 export const getApplication = memoize(
   function _getApplication(): APPLICATIONS | null {
-    return hasIconFrom('news-web')
+    return isGeneratedBy('PL NEWS WEB')
       ? APPLICATIONS.PLN
       : isSelectable('[name="HandheldFriendly"]')
       ? APPLICATIONS.P1M
