@@ -1,3 +1,9 @@
+/**
+ * @jest-environment jsdom
+ */
+
+import { describe, expect, test } from '@jest/globals';
+
 import {
   APPLICATIONS,
   ENVIRONMENTS,
