@@ -36,6 +36,38 @@ requestDOMPermit('article').then(() => {
 });
 ```
 
+### Development utils
+
+Sometimes developing locally for the PL environment is difficult due to the DOM permit system that `requestDOMPermit` provides an interface for as it relies on events fired by Presentation Layer and the existence of some specific DOM elements.
+
+There is an additional function exported from the library — `mockDecoyActivationEvents` — which can be used to mock the decoy events and make testing using a local test page easier.
+
+Example usage:
+
+```js
+import {
+  requestDOMPermit,
+  mockDecoyActivationEvents,
+} from '@abcnews/env-utils';
+
+if (process.env.NODE_ENV === 'development') {
+  mockDecoyActivationEvents();
+}
+
+requestDOMPermit('key').then(/* you have a permit for 'key' */);
+```
+
+You will also need to add the DOM requestDOMPermit expects for decoys to your testing HTML. For example, a ranged decoy with the key 'key':
+
+```html
+<div data-component="Decoy" data-key="key" data-clone="true">
+  <p>
+    All the stuff between here is inside the decoy and fair game after a DOM
+    permit is granted.
+  </p>
+</div>
+```
+
 ## API
 
 ### `APPLICATIONS`, `GENERATIONS`, & `TIERS`

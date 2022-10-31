@@ -34,6 +34,7 @@ enum PresentationLayerCustomEvents {
   AH = 'articleHydrated',
   DA = 'decoyActive',
   DI = 'decoyInactive',
+  D = 'decoy',
 }
 
 type DOMPermit = {
@@ -59,9 +60,11 @@ declare global {
     [PresentationLayerCustomEvents.AH]: CustomEvent;
     [PresentationLayerCustomEvents.DA]: CustomEvent<DecoyEventDetail>;
     [PresentationLayerCustomEvents.DI]: CustomEvent<DecoyEventDetail>;
+    [PresentationLayerCustomEvents.D]: CustomEvent<DecoyEventDetail>;
   }
   interface Window {
     __ODYSSEY__?: unknown;
+    articleHydrated?: boolean;
   }
 }
 
@@ -300,3 +303,30 @@ export function requestDOMPermit(
       })
   );
 }
+
+export const mockDecoyActivationEvents = (
+  generator: string = 'PL NEWS WEB'
+) => {
+  console.warn(
+    "`mockDecoyActivationEvents()` should only ever be called in development. If you're seeing this in production, please check your code."
+  );
+
+  function decoyEventMockHandler({ detail }: DecoyEvent) {
+    if ((detail.active = true)) {
+      window.dispatchEvent(
+        new CustomEvent<DecoyEventDetail>('decoyActive', {
+          detail: { key: detail.key },
+        })
+      );
+    }
+  }
+  const meta = document.createElement('meta');
+  meta.name = 'generator';
+  meta.content = generator;
+  document.querySelector('head')?.append(meta);
+  window.articleHydrated = true;
+  window.addEventListener(
+    PresentationLayerCustomEvents.D,
+    decoyEventMockHandler
+  );
+};
