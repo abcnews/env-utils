@@ -26,13 +26,20 @@
     "lint": "tsdx lint src",
     "test": "tsdx test",
     "prepublishOnly": "npm run build",
-    "release": "np"
+    "release": "np",
+    "size": "size-limit"
   },
   "husky": {
     "hooks": {
       "pre-commit": "tsdx lint src"
     }
   },
+  "size-limit": [
+    {
+      "path": "dist/env-utils.esm.js",
+      "limit": "5 kB"
+    }
+  ],
   "prettier": {
     "printWidth": 80,
     "semi": true,
@@ -45,12 +52,11 @@
   },
   "devDependencies": {
     "@babel/core": "^7.13.1",
-    "@size-limit/preset-small-lib": "^4.10.1",
+    "@size-limit/preset-small-lib": "^8.1.0",
     "@types/jest": "^26.0.20",
-    "@types/text-encoding": "0.0.35",
-    "husky": "^6.0.0",
+    "husky": "^8.0.1",
     "np": "^7.4.0",
-    "rollup": "^2.39.1",
+    "size-limit": "^8.1.0",
     "tsdx": "^0.14.1",
     "tslib": "^2.1.0",
     "typescript": "^4.2.2"
