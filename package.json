@@ -27,12 +27,8 @@
     "test": "jest",
     "prepublishOnly": "npm run build",
     "release": "np",
-    "size": "size-limit"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "tsdx lint src"
-    }
+    "size": "size-limit",
+    "prepare": "husky install"
   },
   "size-limit": [
     {
