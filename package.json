@@ -32,7 +32,7 @@
   },
   "size-limit": [
     {
-      "path": "dist/env-utils.esm.js",
+      "path": "dist/index.mjs",
       "limit": "5 kB"
     }
   ],
