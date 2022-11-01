@@ -315,11 +315,11 @@ export const mockDecoyActivationEvents = (generator = 'PL NEWS WEB') => {
     "`mockDecoyActivationEvents()` should only ever be called in development. If you're seeing this in production, please check your code!"
   );
 
-  function decoyEventMockHandler({ detail }: DecoyEvent) {
-    if (detail.active === true) {
+  function decoyEventMockHandler({ detail: {active, key} }: DecoyEvent) {
+    if (active === true) {
       window.dispatchEvent(
-        new CustomEvent<DecoyEventDetail>('decoyActive', {
-          detail: { key: detail.key },
+        new CustomEvent<DecoyEventDetail>(PresentationLayerCustomEvents.DA, {
+          detail: { key },
         })
       );
     }
