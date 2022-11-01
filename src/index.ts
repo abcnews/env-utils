@@ -269,9 +269,12 @@ export function requestDOMPermit(
                   onDecoyActiveHandler
                 );
                 window.dispatchEvent(
-                  new CustomEvent<DecoyEventDetail>('decoy', {
-                    detail: { key, active: false },
-                  })
+                  new CustomEvent<DecoyEventDetail>(
+                    PresentationLayerCustomEvents.D,
+                    {
+                      detail: { key, active: false },
+                    }
+                  )
                 );
                 reject(new Error(`Decoy activation timeout for key '${key}'`));
               }, 5000);
@@ -283,9 +286,12 @@ export function requestDOMPermit(
 
               // Request decoy activation by dispatching an event that PL will be listening for
               window.dispatchEvent(
-                new CustomEvent<DecoyEventDetail>('decoy', {
-                  detail: { key, active: true },
-                })
+                new CustomEvent<DecoyEventDetail>(
+                  PresentationLayerCustomEvents.D,
+                  {
+                    detail: { key, active: true },
+                  }
+                )
               );
             }
           );
