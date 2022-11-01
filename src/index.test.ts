@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 
-import { describe, expect, test } from '@jest/globals';
+import { describe, expect, test, jest } from '@jest/globals';
 
 import {
   APPLICATIONS,
@@ -17,10 +17,24 @@ import {
 } from './index';
 
 const setHostName = (str: string) => {
-  // @ts-ignore
-  delete window.location;
-  // @ts-ignore
-  window.location = { hostname: str };
+  const l = global.window.location;
+  Reflect.deleteProperty(global.window, 'location');
+
+  global.window.location = {
+    ancestorOrigins: l.ancestorOrigins,
+    hash: '',
+    host: str,
+    port: '80',
+    protocol: 'http:',
+    hostname: str,
+    href: 'http://dummy.com?page=1&name=testing',
+    origin: 'http://dummy.com',
+    pathname: '',
+    search: '',
+    assign: jest.fn(),
+    reload: jest.fn(),
+    replace: jest.fn(),
+  };
 };
 
 describe('getTier', () => {

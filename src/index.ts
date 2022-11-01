@@ -39,7 +39,7 @@ enum PresentationLayerCustomEvents {
 
 type DOMPermit = {
   key: string;
-  onRevokeHandler?: Function;
+  onRevokeHandler?: () => void;
 };
 
 type DecoyActivationRequests = {
@@ -79,7 +79,7 @@ const isGeneratedBy = (generatorName: string): boolean =>
   isSelectable(`[name="generator"][content="${generatorName}"]`);
 const memoize = <T>(fn: (cache?: boolean) => T) => {
   let cached: T;
-  return (cache: boolean = true) =>
+  return (cache = true) =>
     cache
       ? typeof cached === 'undefined'
         ? ((cached = fn(cache)), cached)
@@ -210,7 +210,7 @@ function bindGlobalRevocationHandler() {
 // Allow us to obtain a permit to modify the DOM at various points
 export function requestDOMPermit(
   key: string,
-  onRevokeHandler?: Function
+  onRevokeHandler?: () => void
 ): Promise<true | HTMLElement[]> {
   return whenDOMReady.then(
     () =>
@@ -227,7 +227,7 @@ export function requestDOMPermit(
 
         // If this is the first permit requested for a location, we need
         // to request a decoy activation before granting the permit
-        if (decoyActivationRequests[key] == null) {
+        if (typeof decoyActivationRequests[key] === 'undefined') {
           decoyActivationRequests[key] = new Promise<HTMLElement[]>(
             (resolve, reject) => {
               const expectedActivations = document.querySelectorAll(
@@ -294,7 +294,7 @@ export function requestDOMPermit(
         // Grant the permit if/when the decoy is active, and store a
         // reference so that a revocation handler can be called
         // when PL decides to deactivate the decoy
-        decoyActivationRequests[key]!.then(els => {
+        decoyActivationRequests[key].then(els => {
           domPermitsGranted = domPermitsGranted.concat([
             { key, onRevokeHandler },
           ]);
@@ -304,15 +304,13 @@ export function requestDOMPermit(
   );
 }
 
-export const mockDecoyActivationEvents = (
-  generator: string = 'PL NEWS WEB'
-) => {
+export const mockDecoyActivationEvents = (generator = 'PL NEWS WEB') => {
   console.warn(
-    "`mockDecoyActivationEvents()` should only ever be called in development. If you're seeing this in production, please check your code."
+    "`mockDecoyActivationEvents()` should only ever be called in development. If you're seeing this in production, please check your code!"
   );
 
   function decoyEventMockHandler({ detail }: DecoyEvent) {
-    if ((detail.active = true)) {
+    if (detail.active === true) {
       window.dispatchEvent(
         new CustomEvent<DecoyEventDetail>('decoyActive', {
           detail: { key: detail.key },
