@@ -16,21 +16,31 @@ import {
   TIERS,
 } from './index';
 
-const setHostName = (str: string) => {
+const setLocation = ({
+  hash,
+  host,
+  port,
+  protocol,
+  hostname,
+  href,
+  origin,
+  pathname,
+  search,
+}: URL) => {
   const l = global.window.location;
   Reflect.deleteProperty(global.window, 'location');
 
   global.window.location = {
     ancestorOrigins: l.ancestorOrigins,
-    hash: '',
-    host: str,
-    port: '80',
-    protocol: 'http:',
-    hostname: str,
-    href: 'http://dummy.com?page=1&name=testing',
-    origin: 'http://dummy.com',
-    pathname: '',
-    search: '',
+    hash,
+    host,
+    port,
+    protocol,
+    hostname,
+    href,
+    origin,
+    pathname,
+    search,
     assign: jest.fn(),
     reload: jest.fn(),
     replace: jest.fn(),
@@ -46,7 +56,7 @@ describe('getTier', () => {
 
   LIVE_DOMAINS.forEach(d => {
     test(`${d} should return live`, () => {
-      setHostName(d);
+      setLocation(new URL(`https://${d}`));
       expect(getTier(false)).toBe(TIERS.LIVE);
     });
   });
@@ -57,9 +67,10 @@ describe('getTier', () => {
     process.env.DOMAIN_NUCWED || '',
     process.env.DOMAIN_AMP_PREVIEW || '',
   ];
+
   PREVIEW_DOMAINS.forEach(d => {
     test(`${d} should return preview`, () => {
-      setHostName(d);
+      setLocation(new URL(`https://${d}`));
       expect(getTier(false)).toBe(TIERS.PREVIEW);
     });
   });
@@ -70,7 +81,7 @@ describe('getEnvironment', () => {
 
   UAT_DOMAINS.forEach(d => {
     test(`${d} should return uat`, () => {
-      setHostName(d);
+      setLocation(new URL(`https://${d}`));
       expect(getEnvironment(false)).toBe(ENVIRONMENTS.UAT);
     });
   });
@@ -83,7 +94,7 @@ describe('getEnvironment', () => {
 
   PROD_DOMAINS.forEach(d => {
     test(`${d} should return production`, () => {
-      setHostName(d);
+      setLocation(new URL(`https://${d}`));
       expect(getEnvironment(false)).toBe(ENVIRONMENTS.PROD);
     });
   });
