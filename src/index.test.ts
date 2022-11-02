@@ -1,3 +1,9 @@
+/**
+ * @jest-environment jsdom
+ */
+
+import { describe, expect, test, jest } from '@jest/globals';
+
 import {
   APPLICATIONS,
   ENVIRONMENTS,
@@ -10,11 +16,35 @@ import {
   TIERS,
 } from './index';
 
-const setHostName = (str: string) => {
-  // @ts-ignore
-  delete window.location;
-  // @ts-ignore
-  window.location = { hostname: str };
+const setLocation = ({
+  hash,
+  host,
+  port,
+  protocol,
+  hostname,
+  href,
+  origin,
+  pathname,
+  search,
+}: URL) => {
+  const l = global.window.location;
+  Reflect.deleteProperty(global.window, 'location');
+
+  global.window.location = {
+    ancestorOrigins: l.ancestorOrigins,
+    hash,
+    host,
+    port,
+    protocol,
+    hostname,
+    href,
+    origin,
+    pathname,
+    search,
+    assign: jest.fn(),
+    reload: jest.fn(),
+    replace: jest.fn(),
+  };
 };
 
 describe('getTier', () => {
@@ -26,7 +56,7 @@ describe('getTier', () => {
 
   LIVE_DOMAINS.forEach(d => {
     test(`${d} should return live`, () => {
-      setHostName(d);
+      setLocation(new URL(`https://${d}`));
       expect(getTier(false)).toBe(TIERS.LIVE);
     });
   });
@@ -37,9 +67,10 @@ describe('getTier', () => {
     process.env.DOMAIN_NUCWED || '',
     process.env.DOMAIN_AMP_PREVIEW || '',
   ];
+
   PREVIEW_DOMAINS.forEach(d => {
     test(`${d} should return preview`, () => {
-      setHostName(d);
+      setLocation(new URL(`https://${d}`));
       expect(getTier(false)).toBe(TIERS.PREVIEW);
     });
   });
@@ -50,7 +81,7 @@ describe('getEnvironment', () => {
 
   UAT_DOMAINS.forEach(d => {
     test(`${d} should return uat`, () => {
-      setHostName(d);
+      setLocation(new URL(`https://${d}`));
       expect(getEnvironment(false)).toBe(ENVIRONMENTS.UAT);
     });
   });
@@ -63,7 +94,7 @@ describe('getEnvironment', () => {
 
   PROD_DOMAINS.forEach(d => {
     test(`${d} should return production`, () => {
-      setHostName(d);
+      setLocation(new URL(`https://${d}`));
       expect(getEnvironment(false)).toBe(ENVIRONMENTS.PROD);
     });
   });
@@ -87,6 +118,13 @@ describe('getApplication', () => {
     document.head.innerHTML =
       '<meta data-react-helmet="true" name="generator" content="PL ABC AMP">';
     expect(getApplication(false)).toBe(APPLICATIONS.PLA);
+    document.head.innerHTML = '';
+  });
+
+  test('PL NEWS WEB', () => {
+    document.head.innerHTML =
+      '<meta data-react-helmet="true" name="generator" content="PL NEWS WEB">';
+    expect(getApplication(false)).toBe(APPLICATIONS.PLN);
     document.head.innerHTML = '';
   });
 });

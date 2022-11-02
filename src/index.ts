@@ -34,11 +34,12 @@ enum PresentationLayerCustomEvents {
   AH = 'articleHydrated',
   DA = 'decoyActive',
   DI = 'decoyInactive',
+  D = 'decoy',
 }
 
 type DOMPermit = {
   key: string;
-  onRevokeHandler?: Function;
+  onRevokeHandler?: () => void;
 };
 
 type DecoyActivationRequests = {
@@ -59,9 +60,11 @@ declare global {
     [PresentationLayerCustomEvents.AH]: CustomEvent;
     [PresentationLayerCustomEvents.DA]: CustomEvent<DecoyEventDetail>;
     [PresentationLayerCustomEvents.DI]: CustomEvent<DecoyEventDetail>;
+    [PresentationLayerCustomEvents.D]: CustomEvent<DecoyEventDetail>;
   }
   interface Window {
     __ODYSSEY__?: unknown;
+    articleHydrated?: boolean;
   }
 }
 
@@ -74,11 +77,9 @@ const isSelectable = (selector: string): boolean =>
   !!document.querySelector(selector);
 const isGeneratedBy = (generatorName: string): boolean =>
   isSelectable(`[name="generator"][content="${generatorName}"]`);
-const hasIconFrom = (slug: string): boolean =>
-  isSelectable(`[rel*="icon"][href^="/${slug}/"]`);
 const memoize = <T>(fn: (cache?: boolean) => T) => {
   let cached: T;
-  return (cache: boolean = true) =>
+  return (cache = true) =>
     cache
       ? typeof cached === 'undefined'
         ? ((cached = fn(cache)), cached)
@@ -96,14 +97,10 @@ const memoize = <T>(fn: (cache?: boolean) => T) => {
 //   <meta name="HandheldFriendly"> tag.
 // * Phase 2 and most Presentation Layer applications have a
 //   <meta name="generator"> tag with a distinct "content" property value.
-// * Presentation Layer's News Web application doesn't have a
-//   <meta name="generator"> tag with a distinct "content" property value
-//   when rendering ABC News App articles, so we look for an icon <link>
-//   with a distinct asset path.
 // * Checks are made in order of likelihood, to save unnecessary DOM reads
 export const getApplication = memoize(
   function _getApplication(): APPLICATIONS | null {
-    return hasIconFrom('news-web')
+    return isGeneratedBy('PL NEWS WEB')
       ? APPLICATIONS.PLN
       : isSelectable('[name="HandheldFriendly"]')
       ? APPLICATIONS.P1M
@@ -213,7 +210,7 @@ function bindGlobalRevocationHandler() {
 // Allow us to obtain a permit to modify the DOM at various points
 export function requestDOMPermit(
   key: string,
-  onRevokeHandler?: Function
+  onRevokeHandler?: () => void
 ): Promise<true | HTMLElement[]> {
   return whenDOMReady.then(
     () =>
@@ -230,7 +227,7 @@ export function requestDOMPermit(
 
         // If this is the first permit requested for a location, we need
         // to request a decoy activation before granting the permit
-        if (decoyActivationRequests[key] == null) {
+        if (typeof decoyActivationRequests[key] === 'undefined') {
           decoyActivationRequests[key] = new Promise<HTMLElement[]>(
             (resolve, reject) => {
               const expectedActivations = document.querySelectorAll(
@@ -272,9 +269,12 @@ export function requestDOMPermit(
                   onDecoyActiveHandler
                 );
                 window.dispatchEvent(
-                  new CustomEvent<DecoyEventDetail>('decoy', {
-                    detail: { key, active: false },
-                  })
+                  new CustomEvent<DecoyEventDetail>(
+                    PresentationLayerCustomEvents.D,
+                    {
+                      detail: { key, active: false },
+                    }
+                  )
                 );
                 reject(new Error(`Decoy activation timeout for key '${key}'`));
               }, 5000);
@@ -286,9 +286,12 @@ export function requestDOMPermit(
 
               // Request decoy activation by dispatching an event that PL will be listening for
               window.dispatchEvent(
-                new CustomEvent<DecoyEventDetail>('decoy', {
-                  detail: { key, active: true },
-                })
+                new CustomEvent<DecoyEventDetail>(
+                  PresentationLayerCustomEvents.D,
+                  {
+                    detail: { key, active: true },
+                  }
+                )
               );
             }
           );
@@ -297,7 +300,7 @@ export function requestDOMPermit(
         // Grant the permit if/when the decoy is active, and store a
         // reference so that a revocation handler can be called
         // when PL decides to deactivate the decoy
-        decoyActivationRequests[key]!.then(els => {
+        decoyActivationRequests[key].then(els => {
           domPermitsGranted = domPermitsGranted.concat([
             { key, onRevokeHandler },
           ]);
@@ -306,3 +309,28 @@ export function requestDOMPermit(
       })
   );
 }
+
+export const mockDecoyActivationEvents = (generator = 'PL NEWS WEB') => {
+  console.warn(
+    "`mockDecoyActivationEvents()` should only ever be called in development. If you're seeing this in production, please check your code!"
+  );
+
+  function decoyEventMockHandler({ detail: {active, key} }: DecoyEvent) {
+    if (active === true) {
+      window.dispatchEvent(
+        new CustomEvent<DecoyEventDetail>(PresentationLayerCustomEvents.DA, {
+          detail: { key },
+        })
+      );
+    }
+  }
+  const meta = document.createElement('meta');
+  meta.name = 'generator';
+  meta.content = generator;
+  document.querySelector('head')?.append(meta);
+  window.articleHydrated = true;
+  window.addEventListener(
+    PresentationLayerCustomEvents.D,
+    decoyEventMockHandler
+  );
+};
