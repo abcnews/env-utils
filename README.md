@@ -34,9 +34,8 @@ getTier();
 requestDOMPermit('article').then(() => {
   // It is now safe to modify the DOM tree below the <Decoy key="article"> PL compoonent
 });
-
-Note: use `#start<name> and #end<name>` inside a CoreMedia article to create a ranged decoy.
 ```
+Note: use `#start<name> and #end<name>` inside a CoreMedia article to create a ranged decoy.
 
 ### Development utils
 
