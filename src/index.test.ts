@@ -48,11 +48,7 @@ const setLocation = ({
 };
 
 describe('getTier', () => {
-  const LIVE_DOMAINS = [
-    'www.abc.net.au',
-    'mobile.abc.net.au',
-    'newsapp.abc.net.au',
-  ];
+  const LIVE_DOMAINS = ['www.abc.net.au', 'newsapp.abc.net.au'];
 
   LIVE_DOMAINS.forEach(d => {
     test(`${d} should return live`, () => {
@@ -64,7 +60,6 @@ describe('getTier', () => {
   const PREVIEW_DOMAINS = [
     process.env.DOMAIN_PROD_PREVIEW || '',
     process.env.DOMAIN_PROD_DEVELOPER || '',
-    process.env.DOMAIN_NUCWED || '',
     process.env.DOMAIN_AMP_PREVIEW || '',
   ];
 
@@ -88,7 +83,6 @@ describe('getEnvironment', () => {
 
   const PROD_DOMAINS = [
     process.env.DOMAIN_PROD_PREVIEW || '',
-    process.env.DOMAIN_NUCWED || '',
     process.env.DOMAIN_AMP_PREVIEW || '',
   ];
 
@@ -101,19 +95,6 @@ describe('getEnvironment', () => {
 });
 
 describe('getApplication', () => {
-  test('Phase 1 mobile', () => {
-    document.head.innerHTML = '<meta name="HandheldFriendly" content="true"/>';
-    expect(getApplication(false)).toBe(APPLICATIONS.P1M);
-    document.head.innerHTML = '';
-  });
-
-  test('Phase 1 standard', () => {
-    const comment = document.createComment('COMMENT');
-    document.insertBefore(comment, document.childNodes[1]);
-    expect(getApplication(false)).toBe(APPLICATIONS.P1S);
-    document.removeChild(comment);
-  });
-
   test('PL AMP', () => {
     document.head.innerHTML =
       '<meta data-react-helmet="true" name="generator" content="PL ABC AMP">';

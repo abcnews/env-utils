@@ -1,7 +1,4 @@
 export enum APPLICATIONS {
-  P1M = 'p1m',
-  P1S = 'p1s',
-  P2 = 'p2',
   PLA = 'pla',
   PLC = 'plc',
   PLE = 'ple',
@@ -9,8 +6,6 @@ export enum APPLICATIONS {
 }
 
 export enum GENERATIONS {
-  P1 = 'p1',
-  P2 = 'p2',
   PL = 'pl',
 }
 
@@ -102,12 +97,6 @@ export const getApplication = memoize(
   function _getApplication(): APPLICATIONS | null {
     return isGeneratedBy('PL NEWS WEB')
       ? APPLICATIONS.PLN
-      : isSelectable('[name="HandheldFriendly"]')
-      ? APPLICATIONS.P1M
-      : (document.childNodes[1] || {}).nodeType === Node.COMMENT_NODE
-      ? APPLICATIONS.P1S
-      : isGeneratedBy('WCMS FTL')
-      ? APPLICATIONS.P2
       : isGeneratedBy('PL Everyday')
       ? APPLICATIONS.PLE
       : isGeneratedBy('PL CORE')
@@ -129,11 +118,6 @@ export const getGeneration = memoize(function _getGeneration(
     case APPLICATIONS.PLE:
     case APPLICATIONS.PLN:
       return GENERATIONS.PL;
-    case APPLICATIONS.P2:
-      return GENERATIONS.P2;
-    case APPLICATIONS.P1M:
-    case APPLICATIONS.P1S:
-      return GENERATIONS.P1;
     default:
       return null;
   }
@@ -142,12 +126,9 @@ export const getGeneration = memoize(function _getGeneration(
 // Tier detection
 // * Tiers can be detected (depending on the generation) by matching unique hostnames
 export const getTier = memoize(function _getTier(): TIERS | null {
-  return areAnyPartialsInHostname([
-    'nucwed.aus.aunty',
-    'presentation-layer.abc',
-  ])
+  return areAnyPartialsInHostname(['presentation-layer.abc'])
     ? TIERS.PREVIEW
-    : areAnyPartialsInHostname(['www.abc', 'mobile.abc', 'newsapp.abc'])
+    : areAnyPartialsInHostname(['www.abc', 'newsapp.abc'])
     ? TIERS.LIVE
     : null;
 });
@@ -157,7 +138,7 @@ export const getTier = memoize(function _getTier(): TIERS | null {
 export const getEnvironment = memoize(function _getEnvironment(
   cache = true
 ): ENVIRONMENTS | null {
-  return areAnyPartialsInHostname(['developer.presentation-layer'])
+  return areAnyPartialsInHostname(['presentation-layer.abc-test'])
     ? ENVIRONMENTS.UAT
     : getTier(cache) === TIERS.LIVE || getTier(cache) === TIERS.PREVIEW
     ? ENVIRONMENTS.PROD
@@ -315,7 +296,7 @@ export const mockDecoyActivationEvents = (generator = 'PL NEWS WEB') => {
     "`mockDecoyActivationEvents()` should only ever be called in development. If you're seeing this in production, please check your code!"
   );
 
-  function decoyEventMockHandler({ detail: {active, key} }: DecoyEvent) {
+  function decoyEventMockHandler({ detail: { active, key } }: DecoyEvent) {
     if (active === true) {
       window.dispatchEvent(
         new CustomEvent<DecoyEventDetail>(PresentationLayerCustomEvents.DA, {
