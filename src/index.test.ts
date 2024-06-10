@@ -6,10 +6,8 @@ import { describe, expect, test, jest } from '@jest/globals';
 
 import {
   APPLICATIONS,
-  ENVIRONMENTS,
   GENERATIONS,
   getApplication,
-  getEnvironment,
   getGeneration,
   getTier,
   requestDOMPermit,
@@ -67,29 +65,6 @@ describe('getTier', () => {
     test(`${d} should return preview`, () => {
       setLocation(new URL(`https://${d}`));
       expect(getTier(false)).toBe(TIERS.PREVIEW);
-    });
-  });
-});
-
-describe('getEnvironment', () => {
-  const UAT_DOMAINS = [process.env.DOMAIN_PROD_DEVELOPER || ''];
-
-  UAT_DOMAINS.forEach(d => {
-    test(`${d} should return uat`, () => {
-      setLocation(new URL(`https://${d}`));
-      expect(getEnvironment(false)).toBe(ENVIRONMENTS.UAT);
-    });
-  });
-
-  const PROD_DOMAINS = [
-    process.env.DOMAIN_PROD_PREVIEW || '',
-    process.env.DOMAIN_AMP_PREVIEW || '',
-  ];
-
-  PROD_DOMAINS.forEach(d => {
-    test(`${d} should return production`, () => {
-      setLocation(new URL(`https://${d}`));
-      expect(getEnvironment(false)).toBe(ENVIRONMENTS.PROD);
     });
   });
 });

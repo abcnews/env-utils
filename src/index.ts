@@ -15,11 +15,6 @@ export enum TIERS {
   PREVIEW = 'preview',
 }
 
-export enum ENVIRONMENTS {
-  UAT = 'uat',
-  PROD = 'prod',
-}
-
 export enum DECOY_KEYS {
   ARTICLE = 'article',
   BODY = 'body',
@@ -141,18 +136,6 @@ export const getTier = memoize(function _getTier(): TIERS | null {
     ? TIERS.PREVIEW
     : areAnyPartialsInHostname(['www.abc', 'newsapp.abc'])
     ? TIERS.LIVE
-    : null;
-});
-
-// Environment detection
-// * Environments can be detected by matching host names
-export const getEnvironment = memoize(function _getEnvironment(
-  cache = true
-): ENVIRONMENTS | null {
-  return areAnyPartialsInHostname(['presentation-layer.abc-test'])
-    ? ENVIRONMENTS.UAT
-    : getTier(cache) === TIERS.LIVE || getTier(cache) === TIERS.PREVIEW
-    ? ENVIRONMENTS.PROD
     : null;
 });
 
