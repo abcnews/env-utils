@@ -200,5 +200,5 @@ Running tests requires some environment variables be set. The canonical version 
 
 ## Authors
 
-- Colin Gourlay ([Gourlay.Colin@abc.net.au](mailto:Gourlay.Colin@abc.net.au))
+- Colin Gourlay
 - Simon Elvery ([elvery.simon@abc.net.au](mailto:elvery.simon@abc.net.au))
