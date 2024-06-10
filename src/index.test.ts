@@ -108,6 +108,13 @@ describe('getApplication', () => {
     expect(getApplication(false)).toBe(APPLICATIONS.PLN);
     document.head.innerHTML = '';
   });
+
+  test('PL NEWS WEB (Future)', () => {
+    document.head.innerHTML =
+      '<meta data-react-helmet="true" name="generator" content="PL NEWS WEB"><meta property="ABC.GeneratorTemplate" content="FUTURE">';
+    expect(getApplication(false)).toBe(APPLICATIONS.PLNF);
+    document.head.innerHTML = '';
+  });
 });
 
 describe('getGeneration', () => {

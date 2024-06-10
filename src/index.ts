@@ -3,6 +3,7 @@ export enum APPLICATIONS {
   PLC = 'plc',
   PLE = 'ple',
   PLN = 'pln',
+  PLNF = 'plnf', // Presentation Layer Future News UI
 }
 
 export enum GENERATIONS {
@@ -66,12 +67,19 @@ declare global {
 // Shared constants & functions
 const isPartialInHostname = (partialHostname: string): boolean =>
   window.location.hostname.indexOf(partialHostname) > -1;
+
 const areAnyPartialsInHostname = (partialHostnames: string[]): boolean =>
   !!partialHostnames.find(isPartialInHostname);
+
 const isSelectable = (selector: string): boolean =>
   !!document.querySelector(selector);
+
 const isGeneratedBy = (generatorName: string): boolean =>
   isSelectable(`[name="generator"][content="${generatorName}"]`);
+
+const isTemplate = (templateName: string): boolean =>
+  isSelectable(`[property="ABC.GeneratorTemplate"][content="${templateName}"]`);
+
 const memoize = <T>(fn: (cache?: boolean) => T) => {
   let cached: T;
   return (cache = true) =>
@@ -96,7 +104,9 @@ const memoize = <T>(fn: (cache?: boolean) => T) => {
 export const getApplication = memoize(
   function _getApplication(): APPLICATIONS | null {
     return isGeneratedBy('PL NEWS WEB')
-      ? APPLICATIONS.PLN
+      ? isTemplate('FUTURE')
+        ? APPLICATIONS.PLNF
+        : APPLICATIONS.PLN
       : isGeneratedBy('PL Everyday')
       ? APPLICATIONS.PLE
       : isGeneratedBy('PL CORE')
@@ -117,6 +127,7 @@ export const getGeneration = memoize(function _getGeneration(
     case APPLICATIONS.PLC:
     case APPLICATIONS.PLE:
     case APPLICATIONS.PLN:
+    case APPLICATIONS.PLNF:
       return GENERATIONS.PL;
     default:
       return null;
