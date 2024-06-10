@@ -1,27 +1,18 @@
 export enum APPLICATIONS {
-  P1M = 'p1m',
-  P1S = 'p1s',
-  P2 = 'p2',
   PLA = 'pla',
   PLC = 'plc',
   PLE = 'ple',
   PLN = 'pln',
+  PLNF = 'plnf', // Presentation Layer Future News UI
 }
 
 export enum GENERATIONS {
-  P1 = 'p1',
-  P2 = 'p2',
   PL = 'pl',
 }
 
 export enum TIERS {
   LIVE = 'live',
   PREVIEW = 'preview',
-}
-
-export enum ENVIRONMENTS {
-  UAT = 'uat',
-  PROD = 'prod',
 }
 
 export enum DECOY_KEYS {
@@ -71,12 +62,19 @@ declare global {
 // Shared constants & functions
 const isPartialInHostname = (partialHostname: string): boolean =>
   window.location.hostname.indexOf(partialHostname) > -1;
+
 const areAnyPartialsInHostname = (partialHostnames: string[]): boolean =>
   !!partialHostnames.find(isPartialInHostname);
+
 const isSelectable = (selector: string): boolean =>
   !!document.querySelector(selector);
+
 const isGeneratedBy = (generatorName: string): boolean =>
   isSelectable(`[name="generator"][content="${generatorName}"]`);
+
+const isTemplate = (templateName: string): boolean =>
+  isSelectable(`[property="ABC.GeneratorTemplate"][content="${templateName}"]`);
+
 const memoize = <T>(fn: (cache?: boolean) => T) => {
   let cached: T;
   return (cache = true) =>
@@ -101,13 +99,9 @@ const memoize = <T>(fn: (cache?: boolean) => T) => {
 export const getApplication = memoize(
   function _getApplication(): APPLICATIONS | null {
     return isGeneratedBy('PL NEWS WEB')
-      ? APPLICATIONS.PLN
-      : isSelectable('[name="HandheldFriendly"]')
-      ? APPLICATIONS.P1M
-      : (document.childNodes[1] || {}).nodeType === Node.COMMENT_NODE
-      ? APPLICATIONS.P1S
-      : isGeneratedBy('WCMS FTL')
-      ? APPLICATIONS.P2
+      ? isTemplate('FUTURE')
+        ? APPLICATIONS.PLNF
+        : APPLICATIONS.PLN
       : isGeneratedBy('PL Everyday')
       ? APPLICATIONS.PLE
       : isGeneratedBy('PL CORE')
@@ -128,12 +122,8 @@ export const getGeneration = memoize(function _getGeneration(
     case APPLICATIONS.PLC:
     case APPLICATIONS.PLE:
     case APPLICATIONS.PLN:
+    case APPLICATIONS.PLNF:
       return GENERATIONS.PL;
-    case APPLICATIONS.P2:
-      return GENERATIONS.P2;
-    case APPLICATIONS.P1M:
-    case APPLICATIONS.P1S:
-      return GENERATIONS.P1;
     default:
       return null;
   }
@@ -142,25 +132,10 @@ export const getGeneration = memoize(function _getGeneration(
 // Tier detection
 // * Tiers can be detected (depending on the generation) by matching unique hostnames
 export const getTier = memoize(function _getTier(): TIERS | null {
-  return areAnyPartialsInHostname([
-    'nucwed.aus.aunty',
-    'presentation-layer.abc',
-  ])
+  return areAnyPartialsInHostname(['presentation-layer.abc'])
     ? TIERS.PREVIEW
-    : areAnyPartialsInHostname(['www.abc', 'mobile.abc', 'newsapp.abc'])
+    : areAnyPartialsInHostname(['www.abc', 'newsapp.abc'])
     ? TIERS.LIVE
-    : null;
-});
-
-// Environment detection
-// * Environments can be detected by matching host names
-export const getEnvironment = memoize(function _getEnvironment(
-  cache = true
-): ENVIRONMENTS | null {
-  return areAnyPartialsInHostname(['developer.presentation-layer'])
-    ? ENVIRONMENTS.UAT
-    : getTier(cache) === TIERS.LIVE || getTier(cache) === TIERS.PREVIEW
-    ? ENVIRONMENTS.PROD
     : null;
 });
 
@@ -315,7 +290,7 @@ export const mockDecoyActivationEvents = (generator = 'PL NEWS WEB') => {
     "`mockDecoyActivationEvents()` should only ever be called in development. If you're seeing this in production, please check your code!"
   );
 
-  function decoyEventMockHandler({ detail: {active, key} }: DecoyEvent) {
+  function decoyEventMockHandler({ detail: { active, key } }: DecoyEvent) {
     if (active === true) {
       window.dispatchEvent(
         new CustomEvent<DecoyEventDetail>(PresentationLayerCustomEvents.DA, {

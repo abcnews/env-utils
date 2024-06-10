@@ -6,10 +6,8 @@ import { describe, expect, test, jest } from '@jest/globals';
 
 import {
   APPLICATIONS,
-  ENVIRONMENTS,
   GENERATIONS,
   getApplication,
-  getEnvironment,
   getGeneration,
   getTier,
   requestDOMPermit,
@@ -48,11 +46,7 @@ const setLocation = ({
 };
 
 describe('getTier', () => {
-  const LIVE_DOMAINS = [
-    'www.abc.net.au',
-    'mobile.abc.net.au',
-    'newsapp.abc.net.au',
-  ];
+  const LIVE_DOMAINS = ['www.abc.net.au', 'newsapp.abc.net.au'];
 
   LIVE_DOMAINS.forEach(d => {
     test(`${d} should return live`, () => {
@@ -64,7 +58,6 @@ describe('getTier', () => {
   const PREVIEW_DOMAINS = [
     process.env.DOMAIN_PROD_PREVIEW || '',
     process.env.DOMAIN_PROD_DEVELOPER || '',
-    process.env.DOMAIN_NUCWED || '',
     process.env.DOMAIN_AMP_PREVIEW || '',
   ];
 
@@ -76,44 +69,7 @@ describe('getTier', () => {
   });
 });
 
-describe('getEnvironment', () => {
-  const UAT_DOMAINS = [process.env.DOMAIN_PROD_DEVELOPER || ''];
-
-  UAT_DOMAINS.forEach(d => {
-    test(`${d} should return uat`, () => {
-      setLocation(new URL(`https://${d}`));
-      expect(getEnvironment(false)).toBe(ENVIRONMENTS.UAT);
-    });
-  });
-
-  const PROD_DOMAINS = [
-    process.env.DOMAIN_PROD_PREVIEW || '',
-    process.env.DOMAIN_NUCWED || '',
-    process.env.DOMAIN_AMP_PREVIEW || '',
-  ];
-
-  PROD_DOMAINS.forEach(d => {
-    test(`${d} should return production`, () => {
-      setLocation(new URL(`https://${d}`));
-      expect(getEnvironment(false)).toBe(ENVIRONMENTS.PROD);
-    });
-  });
-});
-
 describe('getApplication', () => {
-  test('Phase 1 mobile', () => {
-    document.head.innerHTML = '<meta name="HandheldFriendly" content="true"/>';
-    expect(getApplication(false)).toBe(APPLICATIONS.P1M);
-    document.head.innerHTML = '';
-  });
-
-  test('Phase 1 standard', () => {
-    const comment = document.createComment('COMMENT');
-    document.insertBefore(comment, document.childNodes[1]);
-    expect(getApplication(false)).toBe(APPLICATIONS.P1S);
-    document.removeChild(comment);
-  });
-
   test('PL AMP', () => {
     document.head.innerHTML =
       '<meta data-react-helmet="true" name="generator" content="PL ABC AMP">';
@@ -125,6 +81,13 @@ describe('getApplication', () => {
     document.head.innerHTML =
       '<meta data-react-helmet="true" name="generator" content="PL NEWS WEB">';
     expect(getApplication(false)).toBe(APPLICATIONS.PLN);
+    document.head.innerHTML = '';
+  });
+
+  test('PL NEWS WEB (Future)', () => {
+    document.head.innerHTML =
+      '<meta data-react-helmet="true" name="generator" content="PL NEWS WEB"><meta property="ABC.GeneratorTemplate" content="FUTURE">';
+    expect(getApplication(false)).toBe(APPLICATIONS.PLNF);
     document.head.innerHTML = '';
   });
 });
