@@ -21,14 +21,13 @@
     "dist"
   ],
   "scripts": {
-    "start": "tsup src/index.ts --dts --sourcemap --format esm,cjs --watch",
-    "build": "tsup src/index.ts --dts --sourcemap --format esm,cjs",
-    "lint": "eslint src",
+    "start": "tsup src/index.ts --dts --sourcemap --format esm --watch",
+    "build": "tsup src/index.ts --dts --sourcemap --format esm",
     "test": "jest",
     "prepublishOnly": "npm run build",
     "release": "np",
     "size": "size-limit",
-    "prepare": "husky install"
+    "prepare": "husky"
   },
   "size-limit": [
     {
@@ -48,18 +47,19 @@
   },
   "devDependencies": {
     "@babel/core": "^7.13.1",
-    "@size-limit/preset-small-lib": "^8.1.0",
-    "@typescript-eslint/eslint-plugin": "^5.42.0",
-    "@typescript-eslint/parser": "^5.42.0",
-    "eslint": "^8.26.0",
-    "husky": "^8.0.1",
+    "@size-limit/preset-small-lib": "^11.2.0",
+    "husky": "^9.1.7",
     "jest": "^29.2.2",
     "jest-environment-jsdom": "^29.2.2",
-    "np": "^7.4.0",
-    "size-limit": "^8.1.0",
+    "np": "^10.2.0",
+    "size-limit": "^11.2.0",
     "ts-jest": "^29.0.3",
     "tslib": "^2.1.0",
-    "tsup": "^6.3.0",
-    "typescript": "^4.2.2"
+    "tsup": "^8.5.0",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "npm": ">=9",
+    "node": ">=20"
   }
 }

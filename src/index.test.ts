@@ -14,35 +14,11 @@ import {
   TIERS,
 } from './index';
 
-const setLocation = ({
-  hash,
-  host,
-  port,
-  protocol,
-  hostname,
-  href,
-  origin,
-  pathname,
-  search,
-}: URL) => {
-  const l = global.window.location;
-  Reflect.deleteProperty(global.window, 'location');
-
-  global.window.location = {
-    ancestorOrigins: l.ancestorOrigins,
-    hash,
-    host,
-    port,
-    protocol,
-    hostname,
-    href,
-    origin,
-    pathname,
-    search,
-    assign: jest.fn(),
-    reload: jest.fn(),
-    replace: jest.fn(),
-  };
+const setLocation = (url: URL) => {
+  Object.defineProperty(window, 'location', {
+    configurable: true,
+    value: url,
+  });
 };
 
 describe('getTier', () => {
