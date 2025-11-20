@@ -292,6 +292,16 @@ export const mockDecoyActivationEvents = (generator = 'PL NEWS WEB') => {
 
   function decoyEventMockHandler({ detail: { active, key } }: DecoyEvent) {
     if (active === true) {
+      // Add the required data to the requested element
+      const selector = `[data-key="${key}"]`;
+      const decoyTargetEl = document.querySelector<HTMLElement>(selector);
+      if (decoyTargetEl) {
+        decoyTargetEl.dataset.clone = 'true';
+      } else {
+        console.warn(`Decoy target for key ${selector} missing`);
+      }
+
+      // emit a success event
       window.dispatchEvent(
         new CustomEvent<DecoyEventDetail>(PresentationLayerCustomEvents.DA, {
           detail: { key },
