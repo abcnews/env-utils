@@ -3,6 +3,9 @@
  */
 
 import { describe, expect, test, jest } from '@jest/globals';
+import dotenv from 'dotenv';
+
+dotenv.config({ path: '.envrc' });
 
 import {
   APPLICATIONS,
