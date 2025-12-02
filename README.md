@@ -178,13 +178,20 @@ The returned promise resolves differently depending on the `GENERATION` on which
 
 The promise will be rejected after 5 seconds if all expected decoys haven't been activated. Additionally, the library will attempt to undo any successful activations by sending another request to PL to deactivate decoys with the given key.
 
-### `whenDOMReady(): Promise<void>`
+### `whenDOMReady: Promise<void>`
 
 A promise that resolves when the DOM is ready. On Presentation Layer documents the DOM isn't considered ready until after the React tree is rehydrated.
 
-### `whenOdysseyLoaded(): Promise<window.__ODYSSEY__>`
+### `whenOdysseyLoaded: Promise<window.__ODYSSEY__>`
 
 A promise that resolves when Odyssey is finished loading. This will resolve with a reference to the Odyssey API.
+
+```ts
+import { whenDOMReady, whenOdysseyLoaded } from '@abcnews/env-utils';
+
+await whenDOMReady;
+const odyssey = await whenOdysseyLoaded;
+```
 
 ## Development
 
