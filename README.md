@@ -81,18 +81,11 @@ import { APPLICATIONS, GENERATIONS, TIERS } from '@abcnews/env-utils';
 
 console.log(APPLICATIONS);
 // > {
-//     P1M: 'p1m', // Phase 1 Mobile
-//     P1S: 'p1s', // Phase 1 Standard
-//     P2:  'p2',  // Phase 2
-//     PLA: 'pla', // Presentation Layer ABC AMP
 //     PLC: 'plc', // Presentation Layer Core
-//     PLE: 'ple', // Presentation Layer Everyday
 //     PLN: 'pln', // Presentation Layer News Web
 //   }
 console.log(GENERATIONS);
 // > {
-//     P1: 'p1', // Phase 1
-//     P2: 'p2', // Phase 2
 //     PL: 'pl', // Presentation Layer
 //   }
 console.log(TIERS);
@@ -104,7 +97,7 @@ console.log(TIERS);
 
 ### `getApplication(): string | null`
 
-Return the environment's **application** (Phase 1 Mobile; Phase 1 Standard; Phase 2; Presentation Layer ABC AMP; Presentation Layer Core; Presentation Layer Everyday; Presentation Layer News Web) as a string value from the `APPLICATIONS` enum, or `null` if the application couldn't be determined.
+Return the environment's **application** (Presentation Layer Core; Presentation Layer News Web) as a string value from the `APPLICATIONS` enum, or `null` if the application couldn't be determined.
 
 ```js
 import { APPLICATIONS, getApplication } from '@abcnews/env-utils';
