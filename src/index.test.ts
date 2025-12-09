@@ -37,7 +37,6 @@ describe('getTier', () => {
   const PREVIEW_DOMAINS = [
     process.env.DOMAIN_PROD_PREVIEW || '',
     process.env.DOMAIN_PROD_DEVELOPER || '',
-    process.env.DOMAIN_AMP_PREVIEW || '',
   ];
 
   PREVIEW_DOMAINS.forEach(d => {
@@ -49,24 +48,10 @@ describe('getTier', () => {
 });
 
 describe('getApplication', () => {
-  test('PL AMP', () => {
-    document.head.innerHTML =
-      '<meta data-react-helmet="true" name="generator" content="PL ABC AMP">';
-    expect(getApplication(false)).toBe(APPLICATIONS.PLA);
-    document.head.innerHTML = '';
-  });
-
   test('PL NEWS WEB', () => {
     document.head.innerHTML =
       '<meta data-react-helmet="true" name="generator" content="PL NEWS WEB">';
     expect(getApplication(false)).toBe(APPLICATIONS.PLN);
-    document.head.innerHTML = '';
-  });
-
-  test('PL NEWS WEB (Future)', () => {
-    document.head.innerHTML =
-      '<meta data-react-helmet="true" name="generator" content="PL NEWS WEB"><meta property="ABC.GeneratorTemplate" content="FUTURE">';
-    expect(getApplication(false)).toBe(APPLICATIONS.PLNF);
     document.head.innerHTML = '';
   });
 });
@@ -74,7 +59,7 @@ describe('getApplication', () => {
 describe('getGeneration', () => {
   test('should return PL for a PL application', () => {
     document.head.innerHTML =
-      '<meta data-react-helmet="true" name="generator" content="PL ABC AMP">';
+      '<meta data-react-helmet="true" name="generator" content="PL NEWS WEB">';
     expect(getGeneration(false)).toBe(GENERATIONS.PL);
     document.head.innerHTML = '';
   });
@@ -105,7 +90,7 @@ describe('requestDOMPermit', () => {
     el.dataset.key = key;
     el.dataset.clone = 'true';
     document.head.innerHTML =
-      '<meta data-react-helmet="true" name="generator" content="PL Everyday">';
+      '<meta data-react-helmet="true" name="generator" content="PL NEWS WEB">';
 
     document.body.appendChild(el);
 

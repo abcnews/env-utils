@@ -1,13 +1,10 @@
 export enum APPLICATIONS {
-  PLA = 'pla',
-  PLC = 'plc',
-  PLE = 'ple',
-  PLN = 'pln',
-  PLNF = 'plnf', // Presentation Layer Future News UI
+  PLC = 'Presentation Layer Core',
+  PLN = 'Presentation Layer News',
 }
 
 export enum GENERATIONS {
-  PL = 'pl',
+  PL = 'Presentation Layer',
 }
 
 export enum TIERS {
@@ -72,9 +69,6 @@ const isSelectable = (selector: string): boolean =>
 const isGeneratedBy = (generatorName: string): boolean =>
   isSelectable(`[name="generator"][content="${generatorName}"]`);
 
-const isTemplate = (templateName: string): boolean =>
-  isSelectable(`[property="ABC.GeneratorTemplate"][content="${templateName}"]`);
-
 const memoize = <T>(fn: (cache?: boolean) => T) => {
   let cached: T;
   return (cache = true) =>
@@ -89,40 +83,27 @@ const memoize = <T>(fn: (cache?: boolean) => T) => {
 // * Because this code can potentially be executed by a <script> in the
 //   document's <head>, we can't rely on <body> (or late <head>) content to
 //   identify each application.
-// * Phase 1 Standard is the only application that uses Internet Explorer's
-//   conditional comments to use an alternative opening <html> tag.
-// * Phase 1 Mobile is the only application with a
-//   <meta name="HandheldFriendly"> tag.
-// * Phase 2 and most Presentation Layer applications have a
 //   <meta name="generator"> tag with a distinct "content" property value.
 // * Checks are made in order of likelihood, to save unnecessary DOM reads
 export const getApplication = memoize(
   function _getApplication(): APPLICATIONS | null {
     return isGeneratedBy('PL NEWS WEB')
-      ? isTemplate('FUTURE')
-        ? APPLICATIONS.PLNF
-        : APPLICATIONS.PLN
-      : isGeneratedBy('PL Everyday')
-      ? APPLICATIONS.PLE
+      ? APPLICATIONS.PLN
       : isGeneratedBy('PL CORE')
       ? APPLICATIONS.PLC
-      : isGeneratedBy('PL ABC AMP')
-      ? APPLICATIONS.PLA
       : null;
   }
 );
 
 // Generation determination
 // * Every generation encompasses one or more applications
+// * As of December 2025 there is only one generation (Presentation Layer) in production
 export const getGeneration = memoize(function _getGeneration(
   cache = true
 ): GENERATIONS | null {
   switch (getApplication(cache)) {
-    case APPLICATIONS.PLA:
     case APPLICATIONS.PLC:
-    case APPLICATIONS.PLE:
     case APPLICATIONS.PLN:
-    case APPLICATIONS.PLNF:
       return GENERATIONS.PL;
     default:
       return null;
