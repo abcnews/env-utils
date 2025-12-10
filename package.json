@@ -5,7 +5,10 @@
   "license": "MIT",
   "author": "Australian Broadcasting Corporation",
   "contributors": [
-    "Colin Gourlay <Gourlay.Colin@abc.net.au>"
+    {
+      "name": "See git commit history",
+      "url": "https://github.com/abcnews/env-utils/graphs/contributors"
+    }
   ],
   "repository": {
     "type": "git",

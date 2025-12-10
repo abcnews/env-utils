@@ -224,7 +224,6 @@ npm run release
 
 Running tests requires some environment variables be set. The canonical version of these env vars are stored as secrets in GitHub, but if you need them to run tests locally, chat to one of the authors listed below.
 
-## Authors
+## Contributors
 
-- Colin Gourlay
-- Simon Elvery ([elvery.simon@abc.net.au](mailto:elvery.simon@abc.net.au))
+See [git commit history](https://github.com/abcnews/env-utils/graphs/contributors)
