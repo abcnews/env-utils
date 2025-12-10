@@ -20,6 +20,7 @@ import {
   getGeneration,
   getTier,
   requestDOMPermit,
+  userPreferences,
 } from '@abcnews/env-utils';
 
 getApplication();
@@ -34,6 +35,12 @@ getTier();
 requestDOMPermit('article').then(() => {
   // It is now safe to modify the DOM tree below the <Decoy key="article"> PL compoonent
 });
+
+userPreferences.prefersReducedMotion;
+// > true|false
+
+userPreferences.prefersColorScheme;
+// > 'light'|'dark'
 ```
 
 Note: use `#start<name> and #end<name>` inside a CoreMedia article to create a ranged decoy.
@@ -185,6 +192,16 @@ import { whenDOMReady, whenOdysseyLoaded } from '@abcnews/env-utils';
 await whenDOMReady;
 const odyssey = await whenOdysseyLoaded;
 ```
+
+### `userPreferences.prefersReducedMotion: boolean`
+
+A boolean that reflects the user's current preference for reduced motion. This is a 'live' value, in that it will be
+updated whenever the user modifies the preference either in the operating system, user agent or via an [in-page toggle](https://github.com/abcnews/interactive-plugins).
+
+### `userPreferences.prefersColorScheme: 'light' | 'dark'
+
+A string representing a user's preference for a light or dark colour scheme. This will be updated whenever the
+preference is changed.
 
 ## Development
 
