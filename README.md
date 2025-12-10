@@ -20,7 +20,8 @@ import {
   getGeneration,
   getTier,
   requestDOMPermit,
-  userPreferences,
+  prefersReducedMotion,
+  prefersColorScheme,
 } from '@abcnews/env-utils';
 
 getApplication();
@@ -36,10 +37,10 @@ requestDOMPermit('article').then(() => {
   // It is now safe to modify the DOM tree below the <Decoy key="article"> PL compoonent
 });
 
-userPreferences.prefersReducedMotion;
+prefersReducedMotion.value;
 // > true|false
 
-userPreferences.prefersColorScheme;
+prefersColorScheme.value;
 // > 'light'|'dark'
 ```
 
