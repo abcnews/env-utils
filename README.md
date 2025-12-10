@@ -193,15 +193,23 @@ await whenDOMReady;
 const odyssey = await whenOdysseyLoaded;
 ```
 
-### `userPreferences.prefersReducedMotion: boolean`
+### `prefersReducedMotion: {subscribe: (fn: (value: boolean) => void) => () => void), value: boolean}`
 
-A boolean that reflects the user's current preference for reduced motion. This is a 'live' value, in that it will be
-updated whenever the user modifies the preference either in the operating system, user agent or via an [in-page toggle](https://github.com/abcnews/interactive-plugins).
+An object with a `.value` property that reflects the user's current preference for reduced motion. This is a 'live'
+value, in that it will be updated whenever the user modifies the preference either in the operating system, user agent
+or via an [in-page toggle](https://github.com/abcnews/interactive-plugins).
 
-### `userPreferences.prefersColorScheme: 'light' | 'dark'
+The object also conforms to the [Svelte store contract](https://svelte.dev/docs/svelte/stores#Store-contract) so can be
+used directly as a store in Svelte.
 
-A string representing a user's preference for a light or dark colour scheme. This will be updated whenever the
-preference is changed.
+### `prefersColorScheme: {subscribe: (fn: (value: 'light'|'dark') => void) => () => void), value: 'light' | 'dark'}`
+
+An object with a `.value` property that reflects the user's current colour scheme preference. This is a 'live'
+value, in that it will be updated whenever the user modifies their preference, either in the operating system, user
+agent.
+
+The object also conforms to the [Svelte store contract](https://svelte.dev/docs/svelte/stores#Store-contract) so can be
+used directly as a store in Svelte.
 
 ## Development
 
