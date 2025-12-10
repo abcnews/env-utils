@@ -163,6 +163,77 @@ function bindGlobalRevocationHandler() {
   });
 }
 
+// Private vars
+let _prefersReducedMotion: boolean | undefined = undefined;
+let _prefersColorScheme: 'light' | 'dark' | undefined = undefined;
+
+export const userPreferences = {
+  // Default value is false to align with standard browser behaviour.
+  get prefersReducedMotion(): boolean {
+    if (typeof _prefersReducedMotion === 'undefined') {
+      Object.defineProperty(this, '_prefersReducedMotion', {
+        writable: true,
+        enumerable: false,
+        configurable: false,
+      });
+      // In page selection takes priority
+      // This is set by the AppReducedMotionToggle component in https://github.com/abcnews/interactive-plugins
+      const getInPageMotionPreference = () => {
+        return (
+          document.body.classList.contains('is-reduced-motion') ||
+          (document.body.classList.contains('is-high-motion') ? false : null)
+        );
+      };
+
+      const inPageMotionPreference = getInPageMotionPreference();
+
+      // Fall back to the global preference if no in-page preference is set.
+      const mediaMatcher = window.matchMedia(
+        '(prefers-reduced-motion: reduce)'
+      );
+
+      // Initial preference.
+      _prefersReducedMotion = inPageMotionPreference ?? mediaMatcher.matches;
+
+      // Handle updates from the in-page toggle
+      const observer = new MutationObserver(([{ target }]) => {
+        if (target instanceof HTMLElement) {
+          _prefersReducedMotion =
+            target.classList.contains('is-reduced-motion');
+        }
+      });
+      observer.observe(document.body, { attributeFilter: ['class'] });
+
+      // Handle updates from the global preference
+      mediaMatcher.addEventListener('change', () => {
+        if (getInPageMotionPreference() === null) {
+          _prefersReducedMotion = mediaMatcher.matches;
+        }
+      });
+    }
+
+    return _prefersReducedMotion;
+  },
+
+  get prefersColorScheme(): 'light' | 'dark' {
+    if (typeof _prefersColorScheme === 'undefined') {
+      const mediaMatcher = window.matchMedia('(prefers-color-scheme: dark)');
+
+      _prefersColorScheme = mediaMatcher.matches ? 'dark' : 'light'; // Light is the default to match browser behaviour
+
+      mediaMatcher.addEventListener('change', () => {
+        _prefersColorScheme = mediaMatcher.matches ? 'dark' : 'light'; // Light is the default to match browser behaviour
+      });
+    }
+
+    return _prefersColorScheme;
+  },
+
+  get prefersColourScheme() {
+    return this.prefersColorScheme;
+  },
+};
+
 // Allow us to obtain a permit to modify the DOM at various points
 export function requestDOMPermit(
   key: string,
