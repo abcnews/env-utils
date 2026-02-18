@@ -44,7 +44,11 @@ prefersColorScheme.value;
 // > 'light'|'dark'
 ```
 
-Note: use `#start<name> and #end<name>` inside a CoreMedia article to create a ranged decoy.
+> [!WARNING]
+> When doing comparisons using values returned from the `get...` functions you should use the enums exported by the package (see API details [below](#applications-generations--tiers)).
+
+> [!NOTE]
+> Use `#start<name>` and `#end<name>` inside a CoreMedia article to create a ranged decoy with the given name.
 
 ### Development utils
 
@@ -89,12 +93,12 @@ import { APPLICATIONS, GENERATIONS, TIERS } from '@abcnews/env-utils';
 
 console.log(APPLICATIONS);
 // > {
-//     PLC: 'plc', // Presentation Layer Core
-//     PLN: 'pln', // Presentation Layer News Web
+//     PLC: 'Presentation Layer Core',
+//     PLN: 'Presentation Layer News',
 //   }
 console.log(GENERATIONS);
 // > {
-//     PL: 'pl', // Presentation Layer
+//     PL: 'Presentation Layer',
 //   }
 console.log(TIERS);
 // > {
@@ -111,7 +115,7 @@ Return the environment's **application** (Presentation Layer Core; Presentation 
 import { APPLICATIONS, getApplication } from '@abcnews/env-utils';
 
 getApplication();
-// > 'pln'
+// > 'Presentation Layer News'
 
 getApplication() === APPLICATIONS.PLN;
 // > true
@@ -127,7 +131,7 @@ Return the environment's **generation** (Phase 1; Phase 2; Presentation Layer) a
 import { GENERATIONS, getGeneration } from '@abcnews/env-utils';
 
 getGeneration();
-// > 'pl'
+// > 'Presentation Layer'
 
 getGeneration() === GENERATIONS.PL;
 // > true
