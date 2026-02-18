@@ -25,10 +25,10 @@ import {
 } from '@abcnews/env-utils';
 
 getApplication();
-// > 'pln'
+// > 'Presentation Layer News'
 
 getGeneration();
-// > 'pl'
+// > 'Presentation Layer'
 
 getTier();
 // > 'preview'
