@@ -103,12 +103,12 @@ export const getApplication = memoize(
         ? APPLICATIONS.PLNF
         : APPLICATIONS.PLN
       : isGeneratedBy('PL Everyday')
-      ? APPLICATIONS.PLE
-      : isGeneratedBy('PL CORE')
-      ? APPLICATIONS.PLC
-      : isGeneratedBy('PL ABC AMP')
-      ? APPLICATIONS.PLA
-      : null;
+        ? APPLICATIONS.PLE
+        : isGeneratedBy('PL CORE')
+          ? APPLICATIONS.PLC
+          : isGeneratedBy('PL ABC AMP')
+            ? APPLICATIONS.PLA
+            : null;
   }
 );
 
@@ -135,8 +135,8 @@ export const getTier = memoize(function _getTier(): TIERS | null {
   return areAnyPartialsInHostname(['presentation-layer.abc'])
     ? TIERS.PREVIEW
     : areAnyPartialsInHostname(['www.abc', 'newsapp.abc'])
-    ? TIERS.LIVE
-    : null;
+      ? TIERS.LIVE
+      : null;
 });
 
 // Store references to PL decoy activation requests and granted DOM permits
@@ -150,11 +150,11 @@ export const whenDOMReady: Promise<void> = new Promise(resolve =>
     /in/.test(document.readyState)
       ? setTimeout(advanceAfterReadyStateComplete, 9)
       : getGeneration() !== GENERATIONS.PL ||
-        PresentationLayerCustomEvents.AH in window
-      ? resolve()
-      : window.addEventListener(PresentationLayerCustomEvents.AH, () =>
-          resolve()
-        );
+          PresentationLayerCustomEvents.AH in window
+        ? resolve()
+        : window.addEventListener(PresentationLayerCustomEvents.AH, () =>
+            resolve()
+          );
   })()
 );
 
@@ -182,11 +182,21 @@ function bindGlobalRevocationHandler() {
   });
 }
 
+let autoKeyIndex = 0;
 // Allow us to obtain a permit to modify the DOM at various points
 export function requestDOMPermit(
-  key: string,
+  keyOrElement: string | HTMLElement,
   onRevokeHandler?: () => void
 ): Promise<true | HTMLElement[]> {
+  let key: string;
+  if (typeof keyOrElement === 'string') {
+    key = keyOrElement;
+  } else {
+    const baseKey = keyOrElement.dataset.key || 'auto-key';
+    key = `${baseKey}-${autoKeyIndex++}`;
+    keyOrElement.dataset.key = key;
+  }
+
   return whenDOMReady.then(
     () =>
       new Promise(resolve => {
