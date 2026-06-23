@@ -109,4 +109,32 @@ describe('requestDOMPermit', () => {
       document.body.innerHTML = '';
     });
   });
+  test('should accept an explicit DOM element and generate a unique key', () => {
+    const el = document.createElement('div');
+    el.dataset.key = 'my-custom-key';
+    el.dataset.clone = 'true';
+    document.head.innerHTML =
+      '<meta data-react-helmet="true" name="generator" content="PL NEWS WEB">';
+
+    document.body.appendChild(el);
+
+    const promise = requestDOMPermit(el);
+    const generatedKey = el.dataset.key;
+    expect(generatedKey).toMatch(/^my-custom-key-\d+$/);
+
+    const listener = jest.fn(() => {
+      window.dispatchEvent(
+        new CustomEvent('decoyActive', {
+          detail: { key: generatedKey },
+        })
+      );
+    });
+    window.addEventListener('decoy', listener);
+    return promise.then(res => {
+      expect(listener).toHaveBeenCalled();
+      expect(res).toEqual([el]);
+      document.head.innerHTML = '';
+      document.body.innerHTML = '';
+    });
+  });
 });
