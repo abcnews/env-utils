@@ -155,7 +155,7 @@ getTier() === TIERS.PREVIEW;
 
 Tiers are currently determined by comparing `window.location.hostname` to domains that tiers are potentially served from.
 
-### `requestDOMPermit(key: string, onRevokeHandler?: Function): Promise<true|HTMLElement[]>`
+### `requestDOMPermit(key: string, onRevokeHandler?: Function): Promise<true|DOMPermitArray>`
 
 Request a permit to modify the DOM.
 
@@ -174,12 +174,17 @@ import { DECOY_KEYS, requestDOMPermit } from '@abcnews/env-utils';
 
 requestDOMPermit(DECOY_KEYS.PAGE, () => {
   // It is no longer safe to modify the DOM tree below <Decoy listenKey="page"> PL compoonents
-}).then(() => {
+}).then((permit) => {
   // It is now safe to modify the DOM tree below <Decoy listenKey="page"> PL compoonents
+  
+  // Let PL know we have finished rendering so it can portal dynamic components ("islands") back in
+  if (permit && typeof permit.onRender === 'function') {
+    permit.onRender();
+  }
 });
 ```
 
-The returned promise resolves differently depending on the `GENERATION` on which it's running. On Presentation Layer sites the promise will resolve with an array of `HTMLElement` references for all the nodes where the decoy was activated. On prior generations, it will resolve with `true`.
+The returned promise resolves differently depending on the `GENERATION` on which it's running. On Presentation Layer sites, the promise will resolve with a `DOMPermitArray` (an array of `HTMLElement` references for all the nodes where the decoy was activated, with an `onRender?: () => void` property attached). On prior generations, it will resolve with `true`.
 
 The promise will be rejected after 5 seconds if all expected decoys haven't been activated. Additionally, the library will attempt to undo any successful activations by sending another request to PL to deactivate decoys with the given key.
 
