@@ -58,8 +58,12 @@ type DOMPermit = {
   onRevokeHandler?: () => void;
 };
 
+export type DOMPermitArray = HTMLElement[] & {
+  onRender?: () => void;
+};
+
 type DecoyActivationRequests = {
-  [key: string]: Promise<HTMLElement[]>;
+  [key: string]: Promise<DOMPermitArray>;
 };
 
 interface DecoyEventDetail {
@@ -211,16 +215,25 @@ const emitDecoyEvent = (
  * 2. fire a `decoy` event with the name of the node we want to use
  * 3. PL picks up that event, clones the DOM inside the decoy to make it static, then fires a `decoyActive` event
  * 4. on decoyActive we are safe to modify the DOM inside our node.
- * 5. After we're done, fire the decoyRendered event to let PL portal any dynamnic components back into the decoy area.
+ * 5. After we're done, call the `onRender` callback (attached to the resolved permit array) to let PL portal any dynamic components back into the decoy area.
  *
- * @param keyOrElement
- * @param onRevokeHandler
- * @returns
+ * @param key The key of the decoy node to request access for.
+ * @param onRevokeHandler Callback when the permit is revoked.
+ * @returns A promise that resolves to `true` (if not in Presentation Layer) or a `DOMPermitArray` containing the decoy's cloned elements and an `onRender` callback.
+ *
+ * @example
+ * ```typescript
+ * const permit = await requestDOMPermit('body');
+ * // ... modify DOM elements in permit ...
+ * if (permit && typeof permit.onRender === 'function') {
+ *   permit.onRender();
+ * }
+ * ```
  */
 export function requestDOMPermit(
   key: string,
   onRevokeHandler?: () => void
-): Promise<true | HTMLElement[]> {
+): Promise<true | DOMPermitArray> {
   return whenDOMReady.then(
     () =>
       new Promise(resolve => {
@@ -237,13 +250,13 @@ export function requestDOMPermit(
         // If this is the first permit requested for a location, we need
         // to request a decoy activation before granting the permit
         if (typeof decoyActivationRequests[key] === 'undefined') {
-          decoyActivationRequests[key] = new Promise<HTMLElement[]>(
+          decoyActivationRequests[key] = new Promise<DOMPermitArray>(
             (resolve, reject) => {
               const expectedActivations = document.querySelectorAll(
                 `[data-key=${key}]`
               ).length;
 
-              const activatedElements: HTMLElement[] = [];
+              const activatedElements: DOMPermitArray = [];
 
               // Handler should only run once per correct key, then stop listening
               function onDecoyActiveHandler({ detail }: DecoyEvent) {
