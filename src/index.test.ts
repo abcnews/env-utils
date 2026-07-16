@@ -102,9 +102,23 @@ describe('requestDOMPermit', () => {
       );
     });
     window.addEventListener('decoy', listener);
+
+    const renderedListener = jest.fn();
+    window.addEventListener('decoyRendered', renderedListener);
+
     return requestDOMPermit(key).then(res => {
       expect(listener).toHaveBeenCalled();
       expect(res).toEqual([el]);
+      expect(res).toHaveProperty('onRender');
+      expect(typeof (res as any).onRender).toBe('function');
+
+      // Call onRender and check if decoyRendered is dispatched
+      (res as any).onRender();
+      expect(renderedListener).toHaveBeenCalled();
+
+      // Cleanup
+      window.removeEventListener('decoyRendered', renderedListener);
+      window.removeEventListener('decoy', listener);
       document.head.innerHTML = '';
       document.body.innerHTML = '';
     });

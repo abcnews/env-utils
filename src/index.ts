@@ -29,9 +29,28 @@ export enum DECOY_KEYS {
 
 enum PresentationLayerCustomEvents {
   AH = 'articleHydrated',
+  /** When the requested decoy range is safe to use. */
   DA = 'decoyActive',
   DI = 'decoyInactive',
+  /**
+   * Fire this event to request a decoy range inside an element.
+   *
+   * PL takes this element, clones the content, and detaches any React rendering
+   * so it becomes completely static.
+   *
+   * Once the decoy is safe to use, PL fires a decoyActive event.
+   */
   D = 'decoy',
+
+  /**
+   * Fire this event once you've finished rendering in the decoty to allow PL to portal components back
+   * into the DOM.
+   *
+   * These are known as "islands" and include things like expandable cards, side by side components, etc.
+   *
+   * These components get mounted into [data-island] containers.
+   */
+  DD = 'decoyRendered',
 }
 
 type DOMPermit = {
@@ -39,8 +58,12 @@ type DOMPermit = {
   onRevokeHandler?: () => void;
 };
 
+export type DOMPermitArray = HTMLElement[] & {
+  onRender?: () => void;
+};
+
 type DecoyActivationRequests = {
-  [key: string]: Promise<HTMLElement[]>;
+  [key: string]: Promise<DOMPermitArray>;
 };
 
 interface DecoyEventDetail {
@@ -99,8 +122,8 @@ export const getApplication = memoize(
     return isGeneratedBy('PL NEWS WEB')
       ? APPLICATIONS.PLN
       : isGeneratedBy('PL CORE')
-      ? APPLICATIONS.PLC
-      : null;
+        ? APPLICATIONS.PLC
+        : null;
   }
 );
 
@@ -125,8 +148,8 @@ export const getTier = memoize(function _getTier(): TIERS | null {
   return areAnyPartialsInHostname(['presentation-layer.abc'])
     ? TIERS.PREVIEW
     : areAnyPartialsInHostname(['www.abc', 'newsapp.abc'])
-    ? TIERS.LIVE
-    : null;
+      ? TIERS.LIVE
+      : null;
 });
 
 // Store references to PL decoy activation requests and granted DOM permits
@@ -140,11 +163,11 @@ export const whenDOMReady: Promise<void> = new Promise(resolve =>
     /in/.test(document.readyState)
       ? setTimeout(advanceAfterReadyStateComplete, 9)
       : getGeneration() !== GENERATIONS.PL ||
-        PresentationLayerCustomEvents.AH in window
-      ? resolve()
-      : window.addEventListener(PresentationLayerCustomEvents.AH, () =>
-          resolve()
-        );
+          PresentationLayerCustomEvents.AH in window
+        ? resolve()
+        : window.addEventListener(PresentationLayerCustomEvents.AH, () =>
+            resolve()
+          );
   })()
 );
 
@@ -172,11 +195,45 @@ function bindGlobalRevocationHandler() {
   });
 }
 
-// Allow us to obtain a permit to modify the DOM at various points
+const emitDecoyEvent = (
+  type: PresentationLayerCustomEvents,
+  key: string,
+  active?: boolean
+) => {
+  window.dispatchEvent(
+    new CustomEvent<DecoyEventDetail>(type, {
+      detail: { key, active },
+    })
+  );
+};
+
+/**
+ * Obtain a permit to modify the requested DOM node.
+ *
+ * The workflow is:
+ * 1. wait for domready
+ * 2. fire a `decoy` event with the name of the node we want to use
+ * 3. PL picks up that event, clones the DOM inside the decoy to make it static, then fires a `decoyActive` event
+ * 4. on decoyActive we are safe to modify the DOM inside our node.
+ * 5. After we're done, call the `onRender` callback (attached to the resolved permit array) to let PL portal any dynamic components back into the decoy area.
+ *
+ * @param key The key of the decoy node to request access for.
+ * @param onRevokeHandler Callback when the permit is revoked.
+ * @returns A promise that resolves to `true` (if not in Presentation Layer) or a `DOMPermitArray` containing the decoy's cloned elements and an `onRender` callback.
+ *
+ * @example
+ * ```typescript
+ * const permit = await requestDOMPermit('body');
+ * // ... modify DOM elements in permit ...
+ * if (permit && typeof permit.onRender === 'function') {
+ *   permit.onRender();
+ * }
+ * ```
+ */
 export function requestDOMPermit(
   key: string,
   onRevokeHandler?: () => void
-): Promise<true | HTMLElement[]> {
+): Promise<true | DOMPermitArray> {
   return whenDOMReady.then(
     () =>
       new Promise(resolve => {
@@ -193,13 +250,13 @@ export function requestDOMPermit(
         // If this is the first permit requested for a location, we need
         // to request a decoy activation before granting the permit
         if (typeof decoyActivationRequests[key] === 'undefined') {
-          decoyActivationRequests[key] = new Promise<HTMLElement[]>(
+          decoyActivationRequests[key] = new Promise<DOMPermitArray>(
             (resolve, reject) => {
               const expectedActivations = document.querySelectorAll(
                 `[data-key=${key}]`
               ).length;
 
-              const activatedElements: HTMLElement[] = [];
+              const activatedElements: DOMPermitArray = [];
 
               // Handler should only run once per correct key, then stop listening
               function onDecoyActiveHandler({ detail }: DecoyEvent) {
@@ -225,6 +282,14 @@ export function requestDOMPermit(
                   PresentationLayerCustomEvents.DA,
                   onDecoyActiveHandler
                 );
+                const onRender = () =>
+                  emitDecoyEvent(PresentationLayerCustomEvents.DD, key, true);
+                Object.defineProperty(activatedElements, 'onRender', {
+                  value: onRender,
+                  enumerable: false,
+                  writable: true,
+                  configurable: true,
+                });
                 resolve(activatedElements);
               }
 
@@ -233,14 +298,7 @@ export function requestDOMPermit(
                   PresentationLayerCustomEvents.DA,
                   onDecoyActiveHandler
                 );
-                window.dispatchEvent(
-                  new CustomEvent<DecoyEventDetail>(
-                    PresentationLayerCustomEvents.D,
-                    {
-                      detail: { key, active: false },
-                    }
-                  )
-                );
+                emitDecoyEvent(PresentationLayerCustomEvents.D, key, false);
                 reject(new Error(`Decoy activation timeout for key '${key}'`));
               }, 5000);
 
@@ -250,14 +308,7 @@ export function requestDOMPermit(
               );
 
               // Request decoy activation by dispatching an event that PL will be listening for
-              window.dispatchEvent(
-                new CustomEvent<DecoyEventDetail>(
-                  PresentationLayerCustomEvents.D,
-                  {
-                    detail: { key, active: true },
-                  }
-                )
-              );
+              emitDecoyEvent(PresentationLayerCustomEvents.D, key, true);
             }
           );
         }
