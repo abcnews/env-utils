@@ -291,11 +291,6 @@ export function requestDOMPermit(
                   configurable: true,
                 });
                 resolve(activatedElements);
-                new Promise(() =>
-                  console.log(
-                    'after requestDOMPermit - async events should fire after odyssey renders'
-                  )
-                );
               }
 
               const timeoutId = window.setTimeout(() => {
