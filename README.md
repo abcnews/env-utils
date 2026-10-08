@@ -1,4 +1,4 @@
-# @abcnews/env-utils
+f# @abcnews/env-utils
 
 Utilities for identifying aspects of your code's execution environment and respectfully interacting with the DOM.
 
@@ -167,7 +167,7 @@ The `key` argument is used by Presentation Layer to activate its respective `<De
 
 An optional `onRevokeHandler` argument can be passed, which will be called if Presentation Layer chooses to deactivate `<Decoy>`s and restore their orignal DOM.
 
-Note: `key` values may be any `[a-z]` string, but the Presentation Layer News Web application provides several pre-determined values, which this library exposes as `DECOY_KEYS`.
+Note: `key` values may be any `[a-z]` string, but the Presentation Layer News Web application provides several pre-determined values, which this library exposes as `DECOY_KEYS` (ARTICLE, BODY, PAGE).
 
 ```js
 import { DECOY_KEYS, requestDOMPermit } from '@abcnews/env-utils';
